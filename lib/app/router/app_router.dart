@@ -17,6 +17,10 @@ import '../../features/appointments/presentation/appointment_detail_page.dart';
 import '../../features/appointments/presentation/appointment_booking_page.dart';
 import '../../features/patient/presentation/medical_record_page.dart';
 import '../../features/settings/presentation/settings_page.dart';
+import '../../features/laboratory/presentation/lab_results_page.dart';
+import '../../features/laboratory/presentation/lab_result_detail_page.dart';
+import '../../features/prescriptions/presentation/prescriptions_page.dart';
+import '../../features/prescriptions/presentation/prescription_detail_page.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
   final refresh = _SessionRouterRefresh();
@@ -105,6 +109,28 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             DocumentPreviewPage(id: state.pathParameters['id']!),
       ),
       GoRoute(
+        path: '/lab-results',
+        name: 'lab-results',
+        builder: (_, _) => const LabResultsPage(),
+      ),
+      GoRoute(
+        path: '/lab-results/:id',
+        name: 'lab-result-detail',
+        builder: (_, state) =>
+            LabResultDetailPage(id: state.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: '/prescriptions',
+        name: 'prescriptions',
+        builder: (_, _) => const PrescriptionsPage(),
+      ),
+      GoRoute(
+        path: '/prescriptions/:id',
+        name: 'prescription-detail',
+        builder: (_, state) =>
+            PrescriptionDetailPage(id: state.pathParameters['id']!),
+      ),
+      GoRoute(
         path: '/settings',
         name: 'settings',
         builder: (_, _) => const SettingsPage(),
@@ -163,6 +189,8 @@ bool _knownReturnPath(String path) {
     '/appointments/new',
     '/consultations',
     '/documents',
+    '/lab-results',
+    '/prescriptions',
   }.contains(path)) {
     return true;
   }
@@ -170,7 +198,8 @@ bool _knownReturnPath(String path) {
       r'[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}';
   return RegExp('^/appointments/$uuid(?:/reschedule)?\$').hasMatch(path) ||
       RegExp('^/consultations/$uuid(?:/documents)?\$').hasMatch(path) ||
-      RegExp('^/documents/$uuid/view\$').hasMatch(path);
+      RegExp('^/documents/$uuid/view\$').hasMatch(path) ||
+      RegExp('^/(?:lab-results|prescriptions)/$uuid\$').hasMatch(path);
 }
 
 class _SessionRouterRefresh extends ChangeNotifier {

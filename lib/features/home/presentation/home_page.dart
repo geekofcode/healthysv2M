@@ -84,6 +84,22 @@ class HomePage extends ConsumerWidget {
                       icon: const Icon(Icons.description_outlined),
                       label: Text(fr ? 'Mes documents' : 'My documents'),
                     ),
+                    OutlinedButton.icon(
+                      onPressed: () => context.pushNamed('lab-results'),
+                      icon: const Icon(Icons.science_outlined),
+                      label: Text(
+                        fr
+                            ? 'Mes résultats de laboratoire'
+                            : 'My laboratory results',
+                      ),
+                    ),
+                    OutlinedButton.icon(
+                      onPressed: () => context.pushNamed('prescriptions'),
+                      icon: const Icon(Icons.medication_outlined),
+                      label: Text(
+                        fr ? 'Mes prescriptions' : 'My prescriptions',
+                      ),
+                    ),
                     FilledButton.icon(
                       onPressed: () => context.pushNamed('medical-record'),
                       icon: const Icon(Icons.folder_open_outlined),

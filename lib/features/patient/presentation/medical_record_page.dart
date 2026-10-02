@@ -44,6 +44,18 @@ class MedicalRecordPage extends ConsumerWidget {
                 icon: const Icon(Icons.description_outlined),
                 label: Text(fr ? 'Mes documents' : 'My documents'),
               ),
+              OutlinedButton.icon(
+                onPressed: () => context.pushNamed('lab-results'),
+                icon: const Icon(Icons.science_outlined),
+                label: Text(
+                  fr ? 'Mes résultats de laboratoire' : 'My laboratory results',
+                ),
+              ),
+              OutlinedButton.icon(
+                onPressed: () => context.pushNamed('prescriptions'),
+                icon: const Icon(Icons.medication_outlined),
+                label: Text(fr ? 'Mes prescriptions' : 'My prescriptions'),
+              ),
               MedicalRecordContent(
                 builder: (context, record) =>
                     MedicalRecordSections(record: record),

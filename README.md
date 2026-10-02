@@ -126,3 +126,11 @@ Les endpoints authentifiés sont `GET /api/v1/patients/me/consultations`, `/cons
 Seuls les documents actifs partagés du patient connecté sont accessibles. Aucune clé de stockage ni URL publique n'est exposée. Le transport contrôle le type, la signature et la taille (25 Mio maximum). Les données en mémoire et les téléchargements sont liés à la session. Le lecteur PDF utilise un fichier temporaire privé supprimé à sa fermeture ; les restes éventuels sont nettoyés au démarrage. Les fichiers enregistrés volontairement dans un emplacement choisi par l'utilisateur y restent disponibles.
 
 Le sélecteur de fichiers impose désormais **iOS 14 minimum**. La CI compile Android ; la visualisation PDF et le sélecteur natif doivent aussi être validés sur appareils Android/iOS avec le backend déployé.
+
+## Laboratoire et prescriptions (18.7)
+
+Les routes protégées `/lab-results` et `/prescriptions` présentent les données du patient connecté avec pagination, rafraîchissement et détail. Le laboratoire affiche uniquement les résultats finalisés (`FINAL`) disposant d'une validation : examen, paramètre, valeur, unité, bornes de référence, interprétation et indicateur d'anomalie fournis par le laboratoire. L'application ne calcule aucun diagnostic à partir des valeurs et n'affiche pas les notes internes du laboratoire.
+
+Les prescriptions affichent le prescripteur, l'établissement, les médicaments (nom, forme et dosage), la posologie, fréquence, voie, durée et instructions, les quantités prescrites/délivrées/restantes, le statut et l'expiration. Le détail présente les dispensations avec date, pharmacie, statut et quantités. Une prescription annulée ou délivrée conserve son statut historique ; une prescription active ou partiellement délivrée dépassant sa date limite est indiquée comme expirée.
+
+Déployer le backend 18.7 : `GET /api/v1/patients/me/lab-results`, `/lab-results/{id}`, `/prescriptions`, `/prescriptions/{id}`. L'identité est résolue exclusivement depuis le compte Keycloak. Les données restent en mémoire, les chargements sont annulés et les réponses tardives rejetées lorsque la session change. Les parcours sont en lecture seule ; les opérations métier de prescription, validation et dispensation restent réservées aux professionnels.
