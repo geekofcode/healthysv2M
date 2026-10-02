@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../application/patient_medical_record_provider.dart';
 import 'medical_record_content.dart';
 import 'medical_record_sections.dart';
@@ -33,6 +34,16 @@ class MedicalRecordPage extends ConsumerWidget {
                 style: Theme.of(context).textTheme.titleMedium,
               ),
               const SizedBox(height: 12),
+              OutlinedButton.icon(
+                onPressed: () => context.pushNamed('consultations'),
+                icon: const Icon(Icons.medical_services_outlined),
+                label: Text(fr ? 'Mes consultations' : 'My consultations'),
+              ),
+              OutlinedButton.icon(
+                onPressed: () => context.pushNamed('documents'),
+                icon: const Icon(Icons.description_outlined),
+                label: Text(fr ? 'Mes documents' : 'My documents'),
+              ),
               MedicalRecordContent(
                 builder: (context, record) =>
                     MedicalRecordSections(record: record),

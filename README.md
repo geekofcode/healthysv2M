@@ -116,3 +116,13 @@ L'agenda présente les rendez-vous à venir et passés, avec pagination, détail
 Le mobile utilise les endpoints `patients/me/appointments` (liste/détail/création), `booking-options`, `availability`, puis les actions `cancel` et `reschedule`. Le patient est déduit exclusivement du compte connecté. Les données et chargements sont liés à la session, sans cache disque. Les actions ne sont ni rejouées automatiquement après 401, ni réessayées après une erreur réseau ; le token peut être renouvelé pour une prochaine action explicite. En cas de résultat incertain, consulter l'agenda avant de renouveler l'action.
 
 Déployer le backend 18.5 avant ces écrans. Il contrôle la propriété du rendez-vous, l'enregistrement dans l'établissement, l'affectation du professionnel et le créneau au moment de la réservation. Les anciennes routes sont également protégées contre les accès à un autre patient. Les créneaux affichés peuvent être pris entre la recherche et la confirmation : un conflit impose d'actualiser les disponibilités.
+
+## Consultations et documents médicaux (18.6)
+
+L'historique paginé présente les consultations terminées. Le détail affiche les diagnostics et notes explicitement partagés avec le patient. Les documents sont accessibles depuis le dossier médical ou filtrés par consultation, avec visualisation PDF/image/texte et enregistrement à la demande via le sélecteur natif.
+
+Les endpoints authentifiés sont `GET /api/v1/patients/me/consultations`, `/consultations/{id}`, `/documents`, `/documents/{id}` et `/documents/{id}/content`. Déployer le backend 18.6 et sa migration V16 : les notes, diagnostics et documents existants restent privés par défaut. Les professionnels autorisés publient ou retirent le partage via `PATCH /api/v1/consultations/{id}/notes/{noteId}/patient-visibility`, `/diagnoses/{diagnosisId}/patient-visibility` ou `/api/v1/documents/{id}/patient-visibility`, avec `{patientVisible:true|false}`.
+
+Seuls les documents actifs partagés du patient connecté sont accessibles. Aucune clé de stockage ni URL publique n'est exposée. Le transport contrôle le type, la signature et la taille (25 Mio maximum). Les données en mémoire et les téléchargements sont liés à la session. Le lecteur PDF utilise un fichier temporaire privé supprimé à sa fermeture ; les restes éventuels sont nettoyés au démarrage. Les fichiers enregistrés volontairement dans un emplacement choisi par l'utilisateur y restent disponibles.
+
+Le sélecteur de fichiers impose désormais **iOS 14 minimum**. La CI compile Android ; la visualisation PDF et le sélecteur natif doivent aussi être validés sur appareils Android/iOS avec le backend déployé.

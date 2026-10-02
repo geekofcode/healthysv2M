@@ -72,6 +72,18 @@ class HomePage extends ConsumerWidget {
                       label: Text(fr ? 'Mes rendez-vous' : 'My appointments'),
                     ),
                     const SizedBox(height: 12),
+                    OutlinedButton.icon(
+                      onPressed: () => context.pushNamed('consultations'),
+                      icon: const Icon(Icons.medical_services_outlined),
+                      label: Text(
+                        fr ? 'Mes consultations' : 'My consultations',
+                      ),
+                    ),
+                    OutlinedButton.icon(
+                      onPressed: () => context.pushNamed('documents'),
+                      icon: const Icon(Icons.description_outlined),
+                      label: Text(fr ? 'Mes documents' : 'My documents'),
+                    ),
                     FilledButton.icon(
                       onPressed: () => context.pushNamed('medical-record'),
                       icon: const Icon(Icons.folder_open_outlined),

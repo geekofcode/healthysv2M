@@ -8,6 +8,10 @@ import '../../features/auth/presentation/auth_page.dart';
 import '../../features/auth/presentation/profile_page.dart';
 
 import '../../features/home/presentation/home_page.dart';
+import '../../features/consultations/presentation/consultation_history_page.dart';
+import '../../features/consultations/presentation/consultation_detail_page.dart';
+import '../../features/documents/presentation/documents_page.dart';
+import '../../features/documents/presentation/document_preview_page.dart';
 import '../../features/appointments/presentation/appointments_page.dart';
 import '../../features/appointments/presentation/appointment_detail_page.dart';
 import '../../features/appointments/presentation/appointment_booking_page.dart';
@@ -73,6 +77,34 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             AppointmentDetailPage(id: state.pathParameters['id']!),
       ),
       GoRoute(
+        path: '/consultations',
+        name: 'consultations',
+        builder: (_, _) => const ConsultationHistoryPage(),
+      ),
+      GoRoute(
+        path: '/consultations/:id/documents',
+        name: 'consultation-documents',
+        builder: (_, state) =>
+            DocumentsPage(consultationId: state.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: '/consultations/:id',
+        name: 'consultation-detail',
+        builder: (_, state) =>
+            ConsultationDetailPage(id: state.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: '/documents',
+        name: 'documents',
+        builder: (_, _) => const DocumentsPage(),
+      ),
+      GoRoute(
+        path: '/documents/:id/view',
+        name: 'document-preview',
+        builder: (_, state) =>
+            DocumentPreviewPage(id: state.pathParameters['id']!),
+      ),
+      GoRoute(
         path: '/settings',
         name: 'settings',
         builder: (_, _) => const SettingsPage(),
@@ -129,12 +161,16 @@ bool _knownReturnPath(String path) {
     '/medical-record',
     '/appointments',
     '/appointments/new',
+    '/consultations',
+    '/documents',
   }.contains(path)) {
     return true;
   }
-  return RegExp(
-    r'^/appointments/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}(?:/reschedule)?$',
-  ).hasMatch(path);
+  const uuid =
+      r'[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}';
+  return RegExp('^/appointments/$uuid(?:/reschedule)?\$').hasMatch(path) ||
+      RegExp('^/consultations/$uuid(?:/documents)?\$').hasMatch(path) ||
+      RegExp('^/documents/$uuid/view\$').hasMatch(path);
 }
 
 class _SessionRouterRefresh extends ChangeNotifier {
