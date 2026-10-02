@@ -1,4 +1,4 @@
-# HEALTH’YS mobile — socle 18.1 et authentification 18.2
+# HEALTH’YS mobile — socle 18.1, authentification 18.2 et espace patient 18.3
 
 Application Flutter Android/iOS. Architecture par fonctionnalité, Riverpod pour injection/état, GoRouter pour navigation et Dio pour HTTP. Le thème Material 3 reprend le vert `#087f5b` du frontend HEALTH’YS et suit le mode clair/sombre du système. Interface initiale FR/EN selon la langue du téléphone, anglais par défaut.
 
@@ -35,7 +35,7 @@ flutter build ipa --dart-define-from-file=config/prod.json
 - `lib/features/<feature>/presentation/` : écrans, puis `application/`, `domain/` et `data/` à ajouter selon les besoins métier.
 - `packages/healthys_api/` : client généré, à régénérer plutôt qu'éditer.
 
-Les futurs repositories utilisent le client injecté ; les providers d'état exposent `AsyncValue` à la présentation. Ne pas créer de Dio par écran. Routes : `/login`, `/`, `/settings` et `/profile`. Les trois dernières sont protégées. La restauration initiale affiche un chargement ; les changements de session actualisent les guards sans recréer le router. Les destinations de retour sont limitées aux routes locales connues.
+Les futurs repositories utilisent le client injecté ; les providers d'état exposent `AsyncValue` à la présentation. Ne pas créer de Dio par écran. Routes : `/login`, `/`, `/settings`, `/profile` et `/medical-record`. Toutes sauf `/login` sont protégées. La restauration initiale affiche un chargement ; les changements de session actualisent les guards sans recréer le router. Les destinations de retour sont limitées aux routes locales connues.
 
 ## HTTP et erreurs
 
@@ -90,3 +90,13 @@ Le profil utilise le véritable endpoint backend **`GET /api/v1/persons/me`**, q
 La déconnexion supprime la session locale, puis appelle le endpoint OIDC de fin de session avec `id_token_hint`. Une indisponibilité Keycloak est signalée tout en maintenant l'utilisateur déconnecté localement. Une erreur de suppression du stockage affiche une action de nouvelle tentative.
 
 Biométrie différée : aucun verrou biométrique local n'est activé pour cette étape. Les parcours navigateur/retour natif, la rotation réelle des tokens et Keychain doivent être validés sur Android/iOS avec le realm déployé ; les tests automatisés utilisent des clients OIDC et profil injectés.
+
+## Accueil et profil patient (18.3)
+
+Le dashboard et le profil affichent les données du patient connecté : identité, contacts, adresses lisibles, assurances (dates et statut de couverture), alertes actives et allergies actives. Les informations manquantes, le dossier non associé (404), les permissions insuffisantes (403), le chargement et les pannes réseau ont des états dédiés, avec rafraîchissement ou nouvelle tentative explicite.
+
+Le repository utilise le Dio partagé pour `GET /api/v1/patients/me/dashboard`. Déployer le changement backend 18.3 avant d'utiliser ces écrans. Le serveur résout exclusivement le patient depuis le sujet JWT et exige le rôle `PATIENT` ; aucun identifiant patient n'est envoyé par le mobile. Ce parcours est en lecture seule, sans création automatique de patient. Le contrat métier est typé manuellement tant que l'export OpenAPI complet n'est pas disponible.
+
+Les données restent en mémoire. La déconnexion ou le changement d'utilisateur annule le chargement et retire les données ; une réponse tardive ne les restaure pas. La navigation vers `/medical-record` ouvre un résumé du groupe sanguin et des alertes disponibles. L'historique médical complet et la modification du profil ne font pas partie de cette étape.
+
+Les tests 18.3 couvrent le contrat, les dates de couverture inclusives, le nettoyage de session, les erreurs, le rafraîchissement et la navigation protégée. Les parcours natifs et les données réelles restent à valider avec le backend déployé.

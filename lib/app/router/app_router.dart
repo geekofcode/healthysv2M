@@ -8,6 +8,7 @@ import '../../features/auth/presentation/auth_page.dart';
 import '../../features/auth/presentation/profile_page.dart';
 
 import '../../features/home/presentation/home_page.dart';
+import '../../features/patient/presentation/medical_record_page.dart';
 import '../../features/settings/presentation/settings_page.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
@@ -41,6 +42,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (_, _) => const ProfilePage(),
       ),
       GoRoute(path: '/', name: 'home', builder: (_, _) => const HomePage()),
+      GoRoute(
+        path: '/medical-record',
+        name: 'medical-record',
+        builder: (_, _) => const MedicalRecordPage(),
+      ),
       GoRoute(
         path: '/settings',
         name: 'settings',
@@ -84,7 +90,12 @@ String safeReturnPath(String? value) {
   if (uri == null ||
       uri.hasScheme ||
       uri.hasAuthority ||
-      !const {'/', '/settings', '/profile'}.contains(uri.path)) {
+      !const {
+        '/',
+        '/settings',
+        '/profile',
+        '/medical-record',
+      }.contains(uri.path)) {
     return '/';
   }
   return uri.path;

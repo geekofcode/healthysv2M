@@ -3,76 +3,82 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../auth/application/session_controller.dart';
 import '../../auth/presentation/session_issue_message.dart';
+import '../../patient/application/patient_dashboard_provider.dart';
+import '../../patient/presentation/patient_content.dart';
+import '../../patient/presentation/patient_sections.dart';
 
 class HomePage extends ConsumerWidget {
   const HomePage({super.key});
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final french = Localizations.localeOf(context).languageCode == 'fr';
+    final fr = isFrench(context);
     final session = ref.watch(sessionControllerProvider);
-    final colors = Theme.of(context).colorScheme;
     return Scaffold(
       appBar: AppBar(
         title: const Text("HEALTH'YS"),
         actions: [
           IconButton(
             onPressed: () => context.pushNamed('profile'),
-            tooltip: french ? 'Profil' : 'Profile',
+            tooltip: fr ? 'Profil' : 'Profile',
             icon: const Icon(Icons.person_outline),
           ),
           IconButton(
             onPressed: () => context.pushNamed('settings'),
-            tooltip: french ? 'Paramètres' : 'Settings',
+            tooltip: fr ? 'Paramètres' : 'Settings',
             icon: const Icon(Icons.settings_outlined),
           ),
         ],
       ),
       body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 480),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (session.error != null) ...[
-                    Text(
-                      sessionIssueMessage(session.issue, french: french),
-                      textAlign: TextAlign.center,
-                    ),
-                    TextButton(
-                      onPressed: () => ref
-                          .read(sessionControllerProvider.notifier)
-                          .reloadProfile(),
-                      child: Text(french ? 'Réessayer' : 'Try again'),
-                    ),
-                    const SizedBox(height: 16),
-                  ],
-                  Icon(
-                    Icons.health_and_safety_outlined,
-                    size: 80,
-                    color: colors.primary,
-                  ),
-                  const SizedBox(height: 24),
-                  Text(
-                    french
-                        ? 'Votre santé, à vos côtés'
-                        : 'Your health, by your side',
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.headlineMedium,
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    french
-                        ? "Bienvenue sur HEALTH'YS. Votre espace de santé mobile prend forme."
-                        : "Welcome to HEALTH'YS. Your mobile health space is taking shape.",
-                    textAlign: TextAlign.center,
-                  ),
-                ],
+        child: RefreshIndicator(
+          onRefresh: () async {
+            ref.invalidate(patientDashboardProvider);
+            try {
+              await ref.read(patientDashboardProvider.future);
+            } catch (_) {
+              /* The provider renders the controlled error state. */
+            }
+          },
+          child: ListView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.all(16),
+            children: [
+              Text(
+                fr ? 'Mon espace patient' : 'My patient dashboard',
+                style: Theme.of(context).textTheme.headlineMedium,
               ),
-            ),
+              const SizedBox(height: 16),
+              if (session.error != null) ...[
+                Text(sessionIssueMessage(session.issue, french: fr)),
+                TextButton(
+                  onPressed: () => ref
+                      .read(sessionControllerProvider.notifier)
+                      .reloadProfile(),
+                  child: Text(fr ? 'Réessayer' : 'Try again'),
+                ),
+              ],
+              PatientContent(
+                builder: (context, dashboard) => Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    PatientIdentitySection(dashboard: dashboard),
+                    PatientContactsSection(dashboard: dashboard),
+                    PatientInsuranceSection(dashboard: dashboard),
+                    PatientAlertsSection(dashboard: dashboard),
+                    const SizedBox(height: 12),
+                    FilledButton.icon(
+                      onPressed: () => context.pushNamed('medical-record'),
+                      icon: const Icon(Icons.folder_open_outlined),
+                      label: Text(
+                        fr
+                            ? 'Ouvrir mon dossier médical'
+                            : 'Open my medical record',
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
         ),
       ),

@@ -6,6 +6,7 @@ import 'package:healthysv2/app/router/app_router.dart';
 import 'package:healthysv2/core/config/app_config.dart';
 import 'package:healthysv2/features/auth/application/session_controller.dart';
 import 'package:healthysv2/features/auth/domain/session.dart';
+import 'package:healthysv2/features/patient/application/patient_dashboard_provider.dart';
 
 class NavigationSession extends SessionController {
   NavigationSession(this.initial);
@@ -38,6 +39,7 @@ class NavigationSession extends SessionController {
 void main() {
   test('return paths allow only known local pages', () {
     expect(safeReturnPath('/profile'), '/profile');
+    expect(safeReturnPath('/medical-record'), '/medical-record');
     expect(safeReturnPath('/settings?extra=1'), '/settings');
     for (final path in [
       'https://example.com',
@@ -58,6 +60,7 @@ void main() {
       );
       final container = ProviderContainer(
         overrides: [
+          patientDashboardProvider.overrideWith((ref) async => null),
           sessionControllerProvider.overrideWith(() => session),
           appConfigProvider.overrideWithValue(
             AppConfig.fromValues(
@@ -101,6 +104,7 @@ void main() {
     );
     final container = ProviderContainer(
       overrides: [
+        patientDashboardProvider.overrideWith((ref) async => null),
         sessionControllerProvider.overrideWith(() => session),
         appConfigProvider.overrideWithValue(
           AppConfig.fromValues(
@@ -136,6 +140,7 @@ void main() {
       final session = NavigationSession(const SessionState());
       final container = ProviderContainer(
         overrides: [
+          patientDashboardProvider.overrideWith((ref) async => null),
           sessionControllerProvider.overrideWith(() => session),
           appConfigProvider.overrideWithValue(
             AppConfig.fromValues(
@@ -173,6 +178,7 @@ void main() {
     );
     final container = ProviderContainer(
       overrides: [
+        patientDashboardProvider.overrideWith((ref) async => null),
         sessionControllerProvider.overrideWith(() => session),
         appConfigProvider.overrideWithValue(
           AppConfig.fromValues(
@@ -199,7 +205,7 @@ void main() {
       findsOneWidget,
     );
     expect(find.text('Sign in'), findsNothing);
-    await tester.tap(find.text('Try again'));
+    await tester.tap(find.text('Try again').first);
     await tester.pumpAndSettle();
     expect(session.profileRetries, 1);
   });

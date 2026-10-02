@@ -5,6 +5,7 @@ import 'package:healthysv2/app/healthys_app.dart';
 import 'package:healthysv2/core/config/app_config.dart';
 import 'package:healthysv2/features/auth/application/session_controller.dart';
 import 'package:healthysv2/features/auth/domain/session.dart';
+import 'package:healthysv2/features/patient/application/patient_dashboard_provider.dart';
 
 class _AuthenticatedSession extends SessionController {
   @override
@@ -17,6 +18,7 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
+          patientDashboardProvider.overrideWith((ref) async => null),
           sessionControllerProvider.overrideWith(_AuthenticatedSession.new),
           appConfigProvider.overrideWithValue(
             AppConfig.fromValues(environment: 'dev', apiBaseUrl: ''),
@@ -32,6 +34,6 @@ void main() {
     expect(find.text('dev'), findsOneWidget);
     await tester.pageBack();
     await tester.pumpAndSettle();
-    expect(find.byIcon(Icons.health_and_safety_outlined), findsOneWidget);
+    expect(find.text('My patient dashboard'), findsOneWidget);
   });
 }
