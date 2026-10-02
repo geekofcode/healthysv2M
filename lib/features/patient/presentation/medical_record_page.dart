@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../application/patient_dashboard_provider.dart';
-import 'patient_content.dart';
+import '../application/patient_medical_record_provider.dart';
+import 'medical_record_content.dart';
+import 'medical_record_sections.dart';
 import 'patient_sections.dart';
 
 class MedicalRecordPage extends ConsumerWidget {
@@ -14,9 +15,9 @@ class MedicalRecordPage extends ConsumerWidget {
       body: SafeArea(
         child: RefreshIndicator(
           onRefresh: () async {
-            ref.invalidate(patientDashboardProvider);
+            ref.invalidate(patientMedicalRecordProvider);
             try {
-              await ref.read(patientDashboardProvider.future);
+              await ref.read(patientMedicalRecordProvider.future);
             } catch (_) {
               /* The provider renders the controlled error state. */
             }
@@ -27,34 +28,14 @@ class MedicalRecordPage extends ConsumerWidget {
             children: [
               Text(
                 fr
-                    ? 'Résumé des informations disponibles'
-                    : 'Summary of available information',
+                    ? 'Votre dossier médical en lecture seule'
+                    : 'Your medical record, read only',
                 style: Theme.of(context).textTheme.titleMedium,
               ),
               const SizedBox(height: 12),
-              PatientContent(
-                builder: (context, dashboard) => Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    PatientSection(
-                      title: fr ? 'Groupe sanguin' : 'Blood group',
-                      children: [
-                        PatientField(
-                          label: fr ? 'Groupe' : 'Group',
-                          value: dashboard.patient.bloodGroup,
-                        ),
-                        PatientField(
-                          label: fr ? 'Rhésus' : 'Rhesus',
-                          value: patientLabel(
-                            dashboard.patient.rhesus,
-                            french: fr,
-                          ),
-                        ),
-                      ],
-                    ),
-                    PatientAlertsSection(dashboard: dashboard),
-                  ],
-                ),
+              MedicalRecordContent(
+                builder: (context, record) =>
+                    MedicalRecordSections(record: record),
               ),
             ],
           ),

@@ -1,4 +1,4 @@
-# HEALTH’YS mobile — socle 18.1, authentification 18.2 et espace patient 18.3
+# HEALTH’YS mobile — socle 18.1, authentification 18.2 et espace patient 18.3–18.4
 
 Application Flutter Android/iOS. Architecture par fonctionnalité, Riverpod pour injection/état, GoRouter pour navigation et Dio pour HTTP. Le thème Material 3 reprend le vert `#087f5b` du frontend HEALTH’YS et suit le mode clair/sombre du système. Interface initiale FR/EN selon la langue du téléphone, anglais par défaut.
 
@@ -97,6 +97,14 @@ Le dashboard et le profil affichent les données du patient connecté : identit�
 
 Le repository utilise le Dio partagé pour `GET /api/v1/patients/me/dashboard`. Déployer le changement backend 18.3 avant d'utiliser ces écrans. Le serveur résout exclusivement le patient depuis le sujet JWT et exige le rôle `PATIENT` ; aucun identifiant patient n'est envoyé par le mobile. Ce parcours est en lecture seule, sans création automatique de patient. Le contrat métier est typé manuellement tant que l'export OpenAPI complet n'est pas disponible.
 
-Les données restent en mémoire. La déconnexion ou le changement d'utilisateur annule le chargement et retire les données ; une réponse tardive ne les restaure pas. La navigation vers `/medical-record` ouvre un résumé du groupe sanguin et des alertes disponibles. L'historique médical complet et la modification du profil ne font pas partie de cette étape.
+Les données restent en mémoire. La déconnexion ou le changement d'utilisateur annule le chargement et retire les données ; une réponse tardive ne les restaure pas. La navigation vers `/medical-record` ouvre le dossier médical décrit ci-dessous. La modification du profil ne fait pas partie de cette étape.
 
 Les tests 18.3 couvrent le contrat, les dates de couverture inclusives, le nettoyage de session, les erreurs, le rafraîchissement et la navigation protégée. Les parcours natifs et les données réelles restent à valider avec le backend déployé.
+
+## Dossier médical patient (18.4)
+
+`/medical-record` charge `GET /api/v1/patients/me/medical-record` avec le Dio et la session partagés. Il affiche le groupe sanguin, les alertes actives, les allergies avec leur statut (y compris les allergies résolues), les maladies chroniques avec le code/libellé du catalogue, les antécédents médicaux, chirurgicaux et familiaux, les handicaps, le profil d'urgence et ses paramètres de visibilité, ainsi que les contacts d'urgence.
+
+Le parcours reste en lecture seule. Les notes privées des professionnels sont exclues du contrat. Le profil d'urgence affiche sa configuration existante : aucun accès public, QR code ou modification de partage n'est ajouté. Les collections vides signifient qu'aucune information n'est enregistrée, pas une absence clinique confirmée. Les dates et libellés absents sont signalés.
+
+Déployer le backend des étapes 18.3–18.4 avant ces écrans. Le endpoint exige le rôle PATIENT, résout l'identité depuis JWT.sub et audite la lecture. Le mobile vérifie également la concordance avec la personne authentifiée. Les données ne sont pas persistées ; les chargements sont annulés et les réponses tardives ignorées lors d'une déconnexion ou d'un changement de compte. Les erreurs 403/404, les pannes et les échecs de rafraîchissement affichent une nouvelle tentative sans conserver de données anciennes à l'écran.

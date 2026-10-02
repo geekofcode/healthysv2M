@@ -8,6 +8,8 @@ import 'package:healthysv2/core/errors/app_exception.dart';
 import 'package:healthysv2/features/auth/application/session_controller.dart';
 import 'package:healthysv2/features/auth/domain/session.dart';
 import 'package:healthysv2/features/patient/application/patient_dashboard_provider.dart';
+import 'package:healthysv2/features/patient/application/patient_medical_record_provider.dart';
+import 'package:healthysv2/features/patient/domain/patient_medical_record.dart';
 import 'package:healthysv2/features/patient/domain/patient_dashboard.dart';
 import 'package:healthysv2/features/home/presentation/home_page.dart';
 
@@ -250,6 +252,12 @@ void main() {
         overrides: [
           sessionControllerProvider.overrideWith(() => session),
           patientDashboardProvider.overrideWith((ref) async => fixture()),
+          patientMedicalRecordProvider.overrideWith(
+            (ref) async => PatientMedicalRecord(
+              patient: fixture().patient,
+              allergies: fixture().allergies,
+            ),
+          ),
         ],
       );
       addTearDown(container.dispose);
