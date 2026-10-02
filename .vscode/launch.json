@@ -1,0 +1,1 @@
+{"version":"0.2.0","configurations":[{"name":"HEALTH'YS dev","request":"launch","type":"dart","program":"lib/main.dart","toolArgs":["--dart-define-from-file=config/dev.json"]}]}
