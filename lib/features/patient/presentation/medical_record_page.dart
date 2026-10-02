@@ -56,6 +56,13 @@ class MedicalRecordPage extends ConsumerWidget {
                 icon: const Icon(Icons.medication_outlined),
                 label: Text(fr ? 'Mes prescriptions' : 'My prescriptions'),
               ),
+              OutlinedButton.icon(
+                onPressed: () => context.pushNamed('maternal-child'),
+                icon: const Icon(Icons.child_care_outlined),
+                label: Text(
+                  fr ? 'Carnet mère-enfant' : 'Mother and child notebook',
+                ),
+              ),
               MedicalRecordContent(
                 builder: (context, record) =>
                     MedicalRecordSections(record: record),

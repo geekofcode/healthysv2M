@@ -100,6 +100,13 @@ class HomePage extends ConsumerWidget {
                         fr ? 'Mes prescriptions' : 'My prescriptions',
                       ),
                     ),
+                    OutlinedButton.icon(
+                      onPressed: () => context.pushNamed('maternal-child'),
+                      icon: const Icon(Icons.child_care_outlined),
+                      label: Text(
+                        fr ? 'Carnet mère-enfant' : 'Mother and child notebook',
+                      ),
+                    ),
                     FilledButton.icon(
                       onPressed: () => context.pushNamed('medical-record'),
                       icon: const Icon(Icons.folder_open_outlined),

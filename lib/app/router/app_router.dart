@@ -22,6 +22,10 @@ import '../../features/laboratory/presentation/lab_result_detail_page.dart';
 import '../../features/prescriptions/presentation/prescriptions_page.dart';
 import '../../features/prescriptions/presentation/prescription_detail_page.dart';
 
+import '../../features/maternal_child/presentation/maternal_child_page.dart';
+import '../../features/maternal_child/presentation/pregnancy_detail_page.dart';
+import '../../features/maternal_child/presentation/child_detail_page.dart';
+
 final appRouterProvider = Provider<GoRouter>((ref) {
   final refresh = _SessionRouterRefresh();
   ref.listen(sessionControllerProvider, (_, _) => refresh.notify());
@@ -131,6 +135,22 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             PrescriptionDetailPage(id: state.pathParameters['id']!),
       ),
       GoRoute(
+        path: '/maternal-child',
+        name: 'maternal-child',
+        builder: (_, _) => const MaternalChildPage(),
+      ),
+      GoRoute(
+        path: '/maternal-child/pregnancies/:id',
+        name: 'pregnancy-detail',
+        builder: (_, state) =>
+            PregnancyDetailPage(id: state.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: '/maternal-child/children/:id',
+        name: 'child-detail',
+        builder: (_, state) => ChildDetailPage(id: state.pathParameters['id']!),
+      ),
+      GoRoute(
         path: '/settings',
         name: 'settings',
         builder: (_, _) => const SettingsPage(),
@@ -195,6 +215,7 @@ bool _knownReturnPath(String path) {
     '/documents',
     '/lab-results',
     '/prescriptions',
+    '/maternal-child',
   }.contains(path)) {
     return true;
   }
@@ -203,7 +224,10 @@ bool _knownReturnPath(String path) {
   return RegExp('^/appointments/$uuid(?:/reschedule)?\$').hasMatch(path) ||
       RegExp('^/consultations/$uuid(?:/documents)?\$').hasMatch(path) ||
       RegExp('^/documents/$uuid/view\$').hasMatch(path) ||
-      RegExp('^/(?:lab-results|prescriptions)/$uuid\$').hasMatch(path);
+      RegExp('^/(?:lab-results|prescriptions)/$uuid\$').hasMatch(path) ||
+      RegExp(
+        '^/maternal-child/(?:pregnancies|children)/$uuid\$',
+      ).hasMatch(path);
 }
 
 class _SessionRouterRefresh extends ChangeNotifier {
