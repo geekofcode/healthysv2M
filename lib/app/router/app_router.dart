@@ -169,6 +169,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
 
 /// Accept only known local destinations; never redirect to external URLs.
 String safeReturnPath(String? value) {
+  if (value != null &&
+      value.split('/').any((segment) => segment == '.' || segment == '..')) {
+    return '/';
+  }
   final uri = value == null ? null : Uri.tryParse(value);
   if (uri == null ||
       uri.hasScheme ||

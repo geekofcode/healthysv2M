@@ -155,6 +155,7 @@ Future<ProviderContainer> pump(
     await tester.pumpAndSettle();
   } else {
     await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
   }
   return container;
 }
