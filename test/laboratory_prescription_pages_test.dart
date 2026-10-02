@@ -25,7 +25,10 @@ class Session extends SessionController {
     status: SessionStatus.authenticated,
     profile: MobileProfile({'id': 'person-1'}),
   );
-  void expire() => state = const SessionState(status: SessionStatus.expired);
+  @override
+  Future<void> expire() async {
+    state = const SessionState(status: SessionStatus.expired);
+  }
 }
 
 class LabRepository implements LabResultRepository {
