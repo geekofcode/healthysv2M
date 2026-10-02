@@ -165,12 +165,12 @@ class _ConversationPageState extends ConsumerState<ConversationPage>
     });
     try {
       final picked = await ref.read(messagingFilePickerProvider).pick();
-      if (picked == null ||
+      if (!mounted ||
+          picked == null ||
           !_resumed ||
           ModalRoute.of(context)?.isCurrent != true ||
           ref.read(sessionControllerProvider.notifier).revision !=
               sessionRevision ||
-          !mounted ||
           !ref.read(sessionControllerProvider).isAuthenticated ||
           ref.read(sessionControllerProvider).profile?.id != identity) {
         return;

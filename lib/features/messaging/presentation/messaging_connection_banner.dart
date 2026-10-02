@@ -4,6 +4,7 @@ import '../application/messaging_providers.dart';
 
 class MessagingConnectionBanner extends StatelessWidget {
   const MessagingConnectionBanner({
+    super.key,
     required this.status,
     required this.onRetry,
   });

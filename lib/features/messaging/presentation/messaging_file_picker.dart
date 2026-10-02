@@ -18,38 +18,26 @@ class NativeMessagingFilePicker implements MessagingFilePicker {
   @override
   Future<PickedMessagingFile?> pick() async {
     try {
-      final selection = await FilePicker.pickFiles(
+      final file = await FilePicker.pickFile(
         type: FileType.custom,
         allowedExtensions: ['pdf', 'png', 'jpg', 'jpeg', 'txt'],
-        withData: false,
-        withReadStream: true,
       );
-      if (selection == null) {
+      if (file == null) {
         return null;
       }
-      final file = selection.files.single;
       const maxBytes = 25 * 1024 * 1024;
-      if (file.size <= 0 || file.size > maxBytes) {
+      final size = await file.length();
+      if (size == null || size <= 0 || size > maxBytes) {
         throw const AppException(kind: AppErrorKind.validation, message: '');
       }
       final builder = BytesBuilder(copy: false);
-      if (file.readStream case final stream?) {
-        await for (final chunk in stream) {
-          if (builder.length + chunk.length > maxBytes) {
-            throw const AppException(
-              kind: AppErrorKind.validation,
-              message: '',
-            );
-          }
-          builder.add(chunk);
-        }
-      } else if (file.bytes case final bytes?) {
-        if (bytes.length > maxBytes) {
+      await for (final chunk in file.readAsByteStream()) {
+        if (builder.length + chunk.length > maxBytes) {
           throw const AppException(kind: AppErrorKind.validation, message: '');
         }
-        builder.add(bytes);
+        builder.add(chunk);
       }
-      if (builder.length != file.size || builder.isEmpty) {
+      if (builder.length != size || builder.isEmpty) {
         throw const AppException(kind: AppErrorKind.validation, message: '');
       }
       return PickedMessagingFile(
