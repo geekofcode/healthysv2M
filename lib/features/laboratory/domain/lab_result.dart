@@ -44,7 +44,7 @@ class LabResultSummary {
       labOrderId: _requiredString(json, 'labOrderId'),
       orderNumber: _requiredString(json, 'orderNumber'),
       patientId: _requiredString(json, 'patientId'),
-      laboratoryOrganizationId: _requiredString(
+      laboratoryOrganizationId: _optionalString(
         json,
         'laboratoryOrganizationId',
       ),
