@@ -1,17 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../auth/application/session_controller.dart';
+import '../../auth/presentation/session_issue_message.dart';
 
-class HomePage extends StatelessWidget {
+class HomePage extends ConsumerWidget {
   const HomePage({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final french = Localizations.localeOf(context).languageCode == 'fr';
+    final session = ref.watch(sessionControllerProvider);
     final colors = Theme.of(context).colorScheme;
     return Scaffold(
       appBar: AppBar(
         title: const Text("HEALTH'YS"),
         actions: [
+          IconButton(
+            onPressed: () => context.pushNamed('profile'),
+            tooltip: french ? 'Profil' : 'Profile',
+            icon: const Icon(Icons.person_outline),
+          ),
           IconButton(
             onPressed: () => context.pushNamed('settings'),
             tooltip: french ? 'Paramètres' : 'Settings',
@@ -28,6 +37,19 @@ class HomePage extends StatelessWidget {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
+                  if (session.error != null) ...[
+                    Text(
+                      sessionIssueMessage(session.issue, french: french),
+                      textAlign: TextAlign.center,
+                    ),
+                    TextButton(
+                      onPressed: () => ref
+                          .read(sessionControllerProvider.notifier)
+                          .reloadProfile(),
+                      child: Text(french ? 'Réessayer' : 'Try again'),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
                   Icon(
                     Icons.health_and_safety_outlined,
                     size: 80,

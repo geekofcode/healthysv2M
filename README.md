@@ -1,4 +1,4 @@
-# HEALTH’YS mobile — socle 18.1
+# HEALTH’YS mobile — socle 18.1 et authentification 18.2
 
 Application Flutter Android/iOS. Architecture par fonctionnalité, Riverpod pour injection/état, GoRouter pour navigation et Dio pour HTTP. Le thème Material 3 reprend le vert `#087f5b` du frontend HEALTH’YS et suit le mode clair/sombre du système. Interface initiale FR/EN selon la langue du téléphone, anglais par défaut.
 
@@ -35,13 +35,13 @@ flutter build ipa --dart-define-from-file=config/prod.json
 - `lib/features/<feature>/presentation/` : écrans, puis `application/`, `domain/` et `data/` à ajouter selon les besoins métier.
 - `packages/healthys_api/` : client généré, à régénérer plutôt qu'éditer.
 
-Les futurs repositories utilisent le client injecté ; les providers d'état exposent `AsyncValue` à la présentation. Ne pas créer de Dio par écran. Routes initiales : `/` et `/settings`, avec une page de secours pour une route inconnue. Les écrans métier et l'authentification Keycloak appartiennent aux étapes suivantes.
+Les futurs repositories utilisent le client injecté ; les providers d'état exposent `AsyncValue` à la présentation. Ne pas créer de Dio par écran. Routes : `/login`, `/`, `/settings` et `/profile`. Les trois dernières sont protégées. La restauration initiale affiche un chargement ; les changements de session actualisent les guards sans recréer le router. Les destinations de retour sont limitées aux routes locales connues.
 
 ## HTTP et erreurs
 
-Le token est lu au moment de chaque requête. Le stockage utilise Keychain sur iOS et le stockage sécurisé Android ; les sauvegardes Android sont désactivées. `TokenStore.clear()` efface la session. Le socle n'implémente ni connexion, ni rafraîchissement de token. Les appels hors origine API sont rejetés ; aucun journal de requêtes ou de données médicales n'est activé.
+Le token est lu au moment de chaque requête. Le stockage utilise Keychain sur iOS et le stockage sécurisé Android ; les sauvegardes Android sont désactivées. `TokenStore.clear()` efface la session. La session est isolée par issuer, client et URL API. Les appels hors origine API sont rejetés ; aucun journal de requêtes ou de données médicales n'est activé.
 
-Les erreurs réseau, timeout, validation, 401, 403, serveur et annulation sont typées. Le format backend `ErrorResponse` est normalisé et conserve la corrélation et les violations de champs. Les futurs écrans doivent utiliser la présentation d'erreurs commune. Un 401 est remis à la couche métier ; aucune redirection vers un écran de connexion fictif.
+Les erreurs réseau, timeout, validation, 401, 403, serveur et annulation sont typées. Le format backend `ErrorResponse` est normalisé et conserve la corrélation et les violations de champs. Les futurs écrans doivent utiliser la présentation d'erreurs commune. Un 401 déclenche un renouvellement et au maximum un rejeu. Un second 401 ferme la session. Les corps en streaming et multipart ne sont pas rejoués automatiquement.
 
 ## OpenAPI
 
@@ -65,3 +65,28 @@ flutter build bundle --target-platform=linux-x64 --dart-define-from-file=config/
 ```
 
 La CI vérifie également le package généré, la reproductibilité OpenAPI et la compilation APK debug. Les tests couvrent la configuration, le transport HTTP, les erreurs, le stockage et la navigation. Une compilation bundle vérifie le code Dart ; les builds APK/iOS demandent respectivement Android SDK et macOS/Xcode.
+
+## Authentification mobile (18.2)
+
+Le navigateur système ouvre Keycloak via `flutter_appauth` : Authorization Code + PKCE S256, client public sans secret, scopes `openid profile email`. L'app ne collecte aucun mot de passe. La connexion demande `prompt=login` pour que l'utilisateur confirme ses identifiants même si une ancienne session navigateur existe.
+
+Configuration alignée sur le realm versionné dans le backend :
+
+| Variable | Valeur initiale |
+| --- | --- |
+| `OIDC_ISSUER` | `https://keycloak.wouri.tv/realms/healthys` |
+| `OIDC_CLIENT_ID` | `healthys-mobile-apps` |
+| `OIDC_REDIRECT_URI` | `healthys://oauth/callback` |
+| `OIDC_POST_LOGOUT_REDIRECT_URI` | `healthys://oauth/callback` |
+
+Le callback est enregistré dans Android et iOS. Changer son schéma exige aussi de modifier ces fichiers natifs et le client Keycloak ; la configuration rejette les callbacks incompatibles. Flutter ne doit pas intercepter ce callback : deep linking Flutter désactivé, AppAuth le traite. Le cache URL iOS est désactivé pour éviter la conservation de réponses OAuth sur disque.
+
+Dans Keycloak, vérifier le client public, Standard Flow activé, PKCE S256, Direct Access Grants désactivé et audience `healthys-backend-apps`. Vérifier aussi **Valid redirect URIs** et **Valid post logout redirect URIs** avec `healthys://oauth/callback`. Le dépôt backend déclare déjà le callback de connexion ; l'instance déployée doit autoriser aussi celui de déconnexion. L'app ne modifie pas le realm distant.
+
+Access token, refresh token, ID token et expiration sont stockés de manière sécurisée. Le refresh s'effectue 60 secondes avant expiration ou à la prochaine requête après reprise de l'application. Les renouvellements concurrents partagent la même opération ; la rotation du refresh token est persistée. Un refresh révoqué (`invalid_grant`) impose une nouvelle connexion. Une panne réseau conserve la session et permet de réessayer. Les réponses d'une ancienne session sont rejetées après déconnexion ou changement d'utilisateur.
+
+Le profil utilise le véritable endpoint backend **`GET /api/v1/persons/me`**, qui retourne `PersonResponse` (pas `/api/v1/me`). Un 404 signale qu'il faut associer l'identité HEALTH’YS au compte Keycloak. Le profil reste en mémoire et n'est pas stocké sur disque. Les guards contrôlent la session ; les permissions métier restent contrôlées par le backend.
+
+La déconnexion supprime la session locale, puis appelle le endpoint OIDC de fin de session avec `id_token_hint`. Une indisponibilité Keycloak est signalée tout en maintenant l'utilisateur déconnecté localement. Une erreur de suppression du stockage affiche une action de nouvelle tentative.
+
+Biométrie différée : aucun verrou biométrique local n'est activé pour cette étape. Les parcours navigateur/retour natif, la rotation réelle des tokens et Keychain doivent être validés sur Android/iOS avec le realm déployé ; les tests automatisés utilisent des clients OIDC et profil injectés.

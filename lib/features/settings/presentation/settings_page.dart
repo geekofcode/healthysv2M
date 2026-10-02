@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/config/app_config.dart';
+import '../../auth/application/session_controller.dart';
+import 'package:go_router/go_router.dart';
 
 class SettingsPage extends ConsumerWidget {
   const SettingsPage({super.key});
@@ -15,6 +17,17 @@ class SettingsPage extends ConsumerWidget {
       body: SafeArea(
         child: ListView(
           children: [
+            ListTile(
+              leading: const Icon(Icons.person_outline),
+              title: Text(french ? 'Mon profil' : 'My profile'),
+              onTap: () => context.pushNamed('profile'),
+            ),
+            ListTile(
+              leading: const Icon(Icons.logout),
+              title: Text(french ? 'Se déconnecter' : 'Sign out'),
+              onTap: () =>
+                  ref.read(sessionControllerProvider.notifier).logout(),
+            ),
             const ListTile(
               leading: Icon(Icons.health_and_safety_outlined),
               title: Text("HEALTH'YS"),

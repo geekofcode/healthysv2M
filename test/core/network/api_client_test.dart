@@ -29,6 +29,7 @@ class MemoryTokens implements TokenStore {
 class RecordingAdapter implements HttpClientAdapter {
   final requests = <RequestOptions>[];
   int status = 200;
+  List<int> statuses = [];
   @override
   Future<ResponseBody> fetch(
     RequestOptions options,
@@ -38,7 +39,7 @@ class RecordingAdapter implements HttpClientAdapter {
     requests.add(options);
     return ResponseBody.fromString(
       '{"message":"Session expirée","code":"AUTH_EXPIRED"}',
-      status,
+      statuses.isEmpty ? status : statuses.removeAt(0),
       headers: {
         Headers.contentTypeHeader: ['application/json'],
       },
@@ -146,4 +147,99 @@ void main() {
       expect(adapter.requests, isEmpty);
     },
   );
+  test('401 refreshes once and retries using rotated token', () async {
+    var token = 'old';
+    var refreshes = 0;
+    var expired = 0;
+    dio = createApiClient(
+      baseUrl: Uri.parse('https://api.healthys.test/api/v1'),
+      tokenStore: tokens,
+      accessToken: ({bool forceRefresh = false}) async {
+        if (forceRefresh) {
+          refreshes++;
+          token = 'new';
+        }
+        return token;
+      },
+      expireSession: () async {
+        expired++;
+      },
+      sessionRevision: () => 1,
+    );
+    dio.httpClientAdapter = adapter;
+    adapter.statuses = [401, 200];
+    await dio.get('persons/me');
+    expect(refreshes, 1);
+    expect(expired, 0);
+    expect(adapter.requests.last.headers['Authorization'], 'Bearer new');
+  });
+
+  test('second 401 expires without an infinite retry', () async {
+    var expired = 0;
+    dio = createApiClient(
+      baseUrl: Uri.parse('https://api.healthys.test/api/v1'),
+      tokenStore: tokens,
+      accessToken: ({bool forceRefresh = false}) async =>
+          forceRefresh ? 'new' : 'old',
+      expireSession: () async {
+        expired++;
+      },
+      sessionRevision: () => 1,
+    );
+    dio.httpClientAdapter = adapter;
+    adapter.status = 401;
+    await expectLater(dio.get('patients'), throwsA(isA<DioException>()));
+    expect(adapter.requests.length, 2);
+    expect(expired, 1);
+  });
+
+  test('refresh outage preserves session and prevents a replay', () async {
+    var expired = 0;
+    dio = createApiClient(
+      baseUrl: Uri.parse('https://api.healthys.test/api/v1'),
+      tokenStore: tokens,
+      accessToken: ({bool forceRefresh = false}) async {
+        if (forceRefresh) throw StateError('offline');
+        return 'old';
+      },
+      expireSession: () async {
+        expired++;
+      },
+      sessionRevision: () => 1,
+    );
+    dio.httpClientAdapter = adapter;
+    adapter.status = 401;
+    await expectLater(dio.get('patients'), throwsA(isA<DioException>()));
+    expect(adapter.requests.length, 1);
+    expect(expired, 0);
+  });
+
+  test('token read interrupted by logout never sends a request', () async {
+    var revision = 1;
+    dio = createApiClient(
+      baseUrl: Uri.parse('https://api.healthys.test/api/v1'),
+      tokenStore: tokens,
+      accessToken: ({bool forceRefresh = false}) async {
+        revision++;
+        return 'old';
+      },
+      sessionRevision: () => revision,
+    );
+    dio.httpClientAdapter = adapter;
+    await expectLater(dio.get('patients'), throwsA(isA<DioException>()));
+    expect(adapter.requests, isEmpty);
+  });
+
+  test('public requests work with a session revision guard', () async {
+    dio = createApiClient(
+      baseUrl: Uri.parse('https://api.healthys.test/api/v1'),
+      tokenStore: tokens,
+      accessToken: ({bool forceRefresh = false}) async =>
+          throw StateError('must not read'),
+      sessionRevision: () => 1,
+    );
+    dio.httpClientAdapter = adapter;
+    await dio.get('public', options: Options(extra: {'requiresAuth': false}));
+    expect(adapter.requests.length, 1);
+  });
 }

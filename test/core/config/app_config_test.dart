@@ -33,4 +33,27 @@ void main() {
       throwsArgumentError,
     );
   });
+  test('OIDC accepts only HTTPS issuer and registered callbacks', () {
+    for (final issuer in [
+      'http://keycloak.test/realms/healthys',
+      'https://user:secret@keycloak.test/realms/healthys',
+    ]) {
+      expect(
+        () => AppConfig.fromValues(
+          environment: 'dev',
+          apiBaseUrl: '',
+          issuer: issuer,
+        ),
+        throwsArgumentError,
+      );
+    }
+    expect(
+      () => AppConfig.fromValues(
+        environment: 'dev',
+        apiBaseUrl: '',
+        oidcRedirectUri: 'other://callback',
+      ),
+      throwsArgumentError,
+    );
+  });
 }

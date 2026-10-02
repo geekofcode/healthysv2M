@@ -3,12 +3,21 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:healthysv2/app/healthys_app.dart';
 import 'package:healthysv2/core/config/app_config.dart';
+import 'package:healthysv2/features/auth/application/session_controller.dart';
+import 'package:healthysv2/features/auth/domain/session.dart';
+
+class _AuthenticatedSession extends SessionController {
+  @override
+  SessionState build() =>
+      const SessionState(status: SessionStatus.authenticated);
+}
 
 void main() {
   testWidgets('home opens settings and returns', (tester) async {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
+          sessionControllerProvider.overrideWith(_AuthenticatedSession.new),
           appConfigProvider.overrideWithValue(
             AppConfig.fromValues(environment: 'dev', apiBaseUrl: ''),
           ),
