@@ -6,14 +6,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:healthysv2/app/healthys_app.dart';
 import 'package:healthysv2/app/router/app_router.dart';
-import 'package:healthysv2/core/config/app_config.dart';
 import 'package:healthysv2/core/errors/app_exception.dart';
 import 'package:healthysv2/features/auth/application/session_controller.dart';
 import 'package:healthysv2/features/auth/domain/session.dart';
 import 'package:healthysv2/features/documents/domain/document.dart';
 import 'package:healthysv2/features/messaging/application/messaging_providers.dart';
 import 'package:healthysv2/features/messaging/data/messaging_repository.dart';
-import 'package:healthysv2/features/messaging/data/messaging_socket.dart';
 import 'package:healthysv2/features/messaging/domain/messaging.dart';
 import 'package:healthysv2/features/messaging/presentation/messaging_file_picker.dart';
 import 'package:healthysv2/features/patient/application/patient_dashboard_provider.dart';
@@ -69,28 +67,46 @@ class Session extends SessionController {
   }
 }
 
-class Socket implements MessagingSocket {
-  final controller = StreamController<Object>.broadcast();
-  final frames = <String>[];
-  bool closed = false;
+class Connection extends MessagingConnectionController {
+  Connection(super.conversationId);
+  int resumes = 0, suspends = 0, reconnects = 0;
   @override
-  Stream<Object> get stream => controller.stream;
+  MessagingConnectionState build() =>
+      const MessagingConnectionState(MessagingConnectionStatus.connected);
   @override
-  void send(String value) {
-    frames.add(value);
-    if (value.startsWith('CONNECT\n') || value.startsWith('STOMP\n')) {
-      scheduleMicrotask(() {
-        if (!closed) {
-          controller.add('CONNECTED\nversion:1.2\nheart-beat:0,0\n\n\u0000');
-        }
-      });
-    }
+  void resume() {
+    resumes++;
   }
 
   @override
-  Future<void> close() async {
-    closed = true;
-    await controller.close();
+  void suspend() {
+    suspends++;
+  }
+
+  @override
+  void reconnect() {
+    reconnects++;
+  }
+}
+
+class ListConnection extends MessagingListConnectionController {
+  int resumes = 0, suspends = 0, reconnects = 0;
+  @override
+  MessagingConnectionState build() =>
+      const MessagingConnectionState(MessagingConnectionStatus.connected);
+  @override
+  void resume() {
+    resumes++;
+  }
+
+  @override
+  void suspend() {
+    suspends++;
+  }
+
+  @override
+  void reconnect() {
+    reconnects++;
   }
 }
 
@@ -273,7 +289,6 @@ Future<ProviderContainer> pump(
   Repository? repository,
   bool french = false,
   bool settle = true,
-  List<Socket>? sockets,
 }) async {
   tester.binding.platformDispatcher.localesTestValue = [
     Locale(french ? 'fr' : 'en'),
@@ -283,19 +298,10 @@ Future<ProviderContainer> pump(
     overrides: [
       sessionControllerProvider.overrideWith(Session.new),
       patientDashboardProvider.overrideWith((ref) async => null),
-      appConfigProvider.overrideWithValue(
-        AppConfig(
-          environment: AppEnvironment.dev,
-          apiBaseUrl: Uri.parse('https://healthys.example/api/v1/'),
-        ),
-      ),
       messagingRepositoryProvider.overrideWithValue(repository ?? Repository()),
       messagingFilePickerProvider.overrideWithValue(Picker()),
-      messagingSocketConnectorProvider.overrideWithValue((uri) async {
-        final socket = Socket();
-        sockets?.add(socket);
-        return socket;
-      }),
+      messagingListConnectionProvider.overrideWith(ListConnection.new),
+      messagingConnectionProvider(cid).overrideWith(() => Connection(cid)),
     ],
   );
   addTearDown(container.dispose);
@@ -421,10 +427,17 @@ void main() {
     tester,
   ) async {
     final repository = Repository()..attachments = true;
-    await pump(tester, '/messages/$cid', repository: repository);
+    final container = await pump(
+      tester,
+      '/messages/$cid',
+      repository: repository,
+    );
+    final connection =
+        container.read(messagingConnectionProvider(cid).notifier) as Connection;
     await tester.tap(find.text('Attachment'));
     await tester.pumpAndSettle();
     expect(find.text('resultat.txt'), findsOneWidget);
+    expect(connection.suspends, greaterThan(0));
     expect(repository.downloads, 0);
     await tester.tap(find.text('Preview'));
     await tester.pumpAndSettle();
@@ -466,13 +479,27 @@ void main() {
   ) async {
     final repository = Repository()
       ..pendingMessages = Completer<MessagingPage<Message>>();
-    await pump(tester, '/messages/$cid', repository: repository, settle: false);
+    final container = await pump(
+      tester,
+      '/messages/$cid',
+      repository: repository,
+      settle: false,
+    );
+    final connection =
+        container.read(messagingConnectionProvider(cid).notifier) as Connection;
+    final resumes = connection.resumes;
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.hidden);
     tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+    expect(connection.suspends, greaterThan(0));
     repository.pendingMessages!.complete(repository.page([incoming()], 0));
     await tester.pumpAndSettle();
     expect(repository.reads, isEmpty);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.hidden);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
     tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
     await tester.pumpAndSettle();
     expect(repository.reads, ['incoming']);
+    expect(connection.resumes, greaterThan(resumes));
   });
 }

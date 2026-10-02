@@ -5,7 +5,7 @@ import 'package:healthysv2/features/messaging/data/stomp_codec.dart';
 import 'package:healthysv2/features/messaging/data/messaging_socket.dart';
 
 class FakeSocket implements MessagingSocket {
-  final events = StreamController<Object>();
+  final events = StreamController<Object>.broadcast();
   final sent = <String>[];
   bool closed = false;
   @override
