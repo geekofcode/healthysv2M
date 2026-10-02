@@ -19,9 +19,14 @@ class DioDocumentRepository implements DocumentRepository {
   DioDocumentRepository(
     this.dio, {
     this.maxDownloadBytes = defaultMaxDownloadBytes,
+    this.contentPath,
+    this.metadataLoader,
   });
   final Dio dio;
   final int maxDownloadBytes;
+  final String Function(String id)? contentPath;
+  final Future<DocumentMetadata> Function(String id, CancelToken token)?
+  metadataLoader;
   static const defaultMaxDownloadBytes = 25 * 1024 * 1024;
   static const supportedMimeTypes = {
     'application/pdf',
@@ -71,11 +76,13 @@ class DioDocumentRepository implements DocumentRepository {
   }) async {
     final token = cancelToken ?? CancelToken();
     try {
-      final metadata = await detail(id, cancelToken: token);
+      final metadata = metadataLoader == null
+          ? await detail(id, cancelToken: token)
+          : await metadataLoader!(id, token);
       _checkMetadata(metadata);
       _ensureNotCancelled(token);
       final response = await dio.get<ResponseBody>(
-        '$_path/${Uri.encodeComponent(id)}/content',
+        contentPath?.call(id) ?? '$_path/${Uri.encodeComponent(id)}/content',
         options: Options(
           responseType: ResponseType.stream,
           followRedirects: false,

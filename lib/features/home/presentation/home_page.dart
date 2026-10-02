@@ -107,6 +107,11 @@ class HomePage extends ConsumerWidget {
                         fr ? 'Carnet mère-enfant' : 'Mother and child notebook',
                       ),
                     ),
+                    OutlinedButton.icon(
+                      onPressed: () => context.pushNamed('conversations'),
+                      icon: const Icon(Icons.chat_bubble_outline),
+                      label: Text(fr ? 'Ma messagerie' : 'My messages'),
+                    ),
                     FilledButton.icon(
                       onPressed: () => context.pushNamed('medical-record'),
                       icon: const Icon(Icons.folder_open_outlined),

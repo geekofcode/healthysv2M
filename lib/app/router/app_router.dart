@@ -8,6 +8,9 @@ import '../../features/auth/presentation/auth_page.dart';
 import '../../features/auth/presentation/profile_page.dart';
 
 import '../../features/home/presentation/home_page.dart';
+import '../../features/messaging/presentation/conversations_page.dart';
+import '../../features/messaging/presentation/conversation_page.dart';
+import '../../features/messaging/presentation/new_conversation_page.dart';
 import '../../features/consultations/presentation/consultation_history_page.dart';
 import '../../features/consultations/presentation/consultation_detail_page.dart';
 import '../../features/documents/presentation/documents_page.dart';
@@ -151,6 +154,22 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (_, state) => ChildDetailPage(id: state.pathParameters['id']!),
       ),
       GoRoute(
+        path: '/messages',
+        name: 'conversations',
+        builder: (_, _) => const ConversationsPage(),
+      ),
+      GoRoute(
+        path: '/messages/new',
+        name: 'conversation-new',
+        builder: (_, _) => const NewConversationPage(),
+      ),
+      GoRoute(
+        path: '/messages/:id',
+        name: 'conversation',
+        builder: (_, state) =>
+            ConversationPage(id: state.pathParameters['id']!),
+      ),
+      GoRoute(
         path: '/settings',
         name: 'settings',
         builder: (_, _) => const SettingsPage(),
@@ -216,6 +235,8 @@ bool _knownReturnPath(String path) {
     '/lab-results',
     '/prescriptions',
     '/maternal-child',
+    '/messages',
+    '/messages/new',
   }.contains(path)) {
     return true;
   }
@@ -224,7 +245,9 @@ bool _knownReturnPath(String path) {
   return RegExp('^/appointments/$uuid(?:/reschedule)?\$').hasMatch(path) ||
       RegExp('^/consultations/$uuid(?:/documents)?\$').hasMatch(path) ||
       RegExp('^/documents/$uuid/view\$').hasMatch(path) ||
-      RegExp('^/(?:lab-results|prescriptions)/$uuid\$').hasMatch(path) ||
+      RegExp(
+        '^/(?:lab-results|prescriptions|messages)/$uuid\$',
+      ).hasMatch(path) ||
       RegExp(
         '^/maternal-child/(?:pregnancies|children)/$uuid\$',
       ).hasMatch(path);

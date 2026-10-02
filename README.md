@@ -142,3 +142,15 @@ Le carnet présente les grossesses et visites prénatales, la naissance, les car
 Déployer le backend 18.8 : listes paginées et détails `GET /api/v1/patients/me/maternal-child/pregnancies`, `/pregnancies/{id}`, `/children`, `/children/{childPatientId}`. La mère consulte ses grossesses et les enfants liés à son patient dans le carnet existant ; un enfant connecté consulte son propre carnet, sans dossier de grossesse de sa mère. Aucun rôle de parent ni nouveau lien n'est créé automatiquement. Les notes internes, risques commentés et observations privées sont exclus des réponses patient.
 
 Les écrans sont en lecture seule, avec navigation protégée, rafraîchissement et erreurs contrôlées. Les données restent en mémoire ; une déconnexion ou un changement de compte annule les chargements et retire le contenu. Les vaccinations distinguent les statuts et échéances fournis par le serveur ; une collection vide indique l'absence de données enregistrées.
+
+## Messagerie temps réel (18.9)
+
+La messagerie patient propose les conversations paginées, l’historique des messages, l’envoi de texte et les pièces jointes PDF, JPEG, PNG ou texte (25 Mio maximum). La lecture et les compteurs de messages non lus sont synchronisés avec le serveur. Les fichiers partagés passent par des endpoints authentifiés de conversation ; aucune URL de stockage publique n’est utilisée.
+
+La connexion WebSocket utilise STOMP 1.2 sur `/ws`, dérivé de la même origine et du même préfixe de déploiement que `API_BASE_URL`. En production, HTTPS implique WSS. Le reverse proxy doit transmettre l’upgrade WebSocket. Le token est envoyé dans le frame CONNECT, sans paramètre d’URL. Les événements déclenchent une resynchronisation REST ; la reprise après une coupure relit les données, sans rejouer automatiquement les envois.
+
+La fermeture d’un écran, la mise en arrière-plan et la fin de session arrêtent les connexions et chargements concernés. Les messages restent en mémoire ; aucun historique ni brouillon n’est persisté. Une erreur d’envoi peut signifier que le serveur a reçu le message : actualiser l’historique avant de renvoyer. Les aperçus utilisent le lecteur de documents existant et ses fichiers temporaires privés.
+
+Déployer les changements API 18.9 avant ces écrans. Les contrôles serveur limitent chaque conversation et chaque pièce jointe aux participants actifs. Les tests automatisés valident les contrats, le codec et les transitions de connexion ; les parcours natifs de sélection de fichier et la connexion au serveur déployé doivent également être vérifiés sur Android/iOS.
+
+La création d’une conversation sélectionne un professionnel nommé parmi les relations de soins actives du patient (`conversations/recipients`). L’annuaire n’expose pas tous les utilisateurs. Le statut de lecture d’un message envoyé repose sur les accusés des autres participants, et non sur la lecture par l’expéditeur lui-même.
