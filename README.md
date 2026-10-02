@@ -1,4 +1,4 @@
-# HEALTH’YS mobile — socle 18.1, authentification 18.2 et espace patient 18.3–18.4
+# HEALTH’YS mobile — socle 18.1, authentification 18.2 et espace patient 18.3–18.5
 
 Application Flutter Android/iOS. Architecture par fonctionnalité, Riverpod pour injection/état, GoRouter pour navigation et Dio pour HTTP. Le thème Material 3 reprend le vert `#087f5b` du frontend HEALTH’YS et suit le mode clair/sombre du système. Interface initiale FR/EN selon la langue du téléphone, anglais par défaut.
 
@@ -35,7 +35,7 @@ flutter build ipa --dart-define-from-file=config/prod.json
 - `lib/features/<feature>/presentation/` : écrans, puis `application/`, `domain/` et `data/` à ajouter selon les besoins métier.
 - `packages/healthys_api/` : client généré, à régénérer plutôt qu'éditer.
 
-Les futurs repositories utilisent le client injecté ; les providers d'état exposent `AsyncValue` à la présentation. Ne pas créer de Dio par écran. Routes : `/login`, `/`, `/settings`, `/profile` et `/medical-record`. Toutes sauf `/login` sont protégées. La restauration initiale affiche un chargement ; les changements de session actualisent les guards sans recréer le router. Les destinations de retour sont limitées aux routes locales connues.
+Les futurs repositories utilisent le client injecté ; les providers d'état exposent `AsyncValue` à la présentation. Ne pas créer de Dio par écran. Routes : `/login`, `/`, `/settings`, `/profile`, `/medical-record` et les routes `/appointments`. Toutes sauf `/login` sont protégées. La restauration initiale affiche un chargement ; les changements de session actualisent les guards sans recréer le router. Les destinations de retour sont limitées aux routes locales connues.
 
 ## HTTP et erreurs
 
@@ -108,3 +108,11 @@ Les tests 18.3 couvrent le contrat, les dates de couverture inclusives, le netto
 Le parcours reste en lecture seule. Les notes privées des professionnels sont exclues du contrat. Le profil d'urgence affiche sa configuration existante : aucun accès public, QR code ou modification de partage n'est ajouté. Les collections vides signifient qu'aucune information n'est enregistrée, pas une absence clinique confirmée. Les dates et libellés absents sont signalés.
 
 Déployer le backend des étapes 18.3–18.4 avant ces écrans. Le endpoint exige le rôle PATIENT, résout l'identité depuis JWT.sub et audite la lecture. Le mobile vérifie également la concordance avec la personne authentifiée. Les données ne sont pas persistées ; les chargements sont annulés et les réponses tardives ignorées lors d'une déconnexion ou d'un changement de compte. Les erreurs 403/404, les pannes et les échecs de rafraîchissement affichent une nouvelle tentative sans conserver de données anciennes à l'écran.
+
+## Rendez-vous et agenda patient (18.5)
+
+L'agenda présente les rendez-vous à venir et passés, avec pagination, détail nommé de l'établissement et du professionnel, horaires dans le fuseau du téléphone, motif et statut. La création propose les établissements où le patient est enregistré et les professionnels affectés, puis des créneaux réels de 30 minutes pour la date choisie. L'annulation et la replanification demandent une confirmation et respectent les actions autorisées par le serveur.
+
+Le mobile utilise les endpoints `patients/me/appointments` (liste/détail/création), `booking-options`, `availability`, puis les actions `cancel` et `reschedule`. Le patient est déduit exclusivement du compte connecté. Les données et chargements sont liés à la session, sans cache disque. Les actions ne sont ni rejouées automatiquement après 401, ni réessayées après une erreur réseau ; le token peut être renouvelé pour une prochaine action explicite. En cas de résultat incertain, consulter l'agenda avant de renouveler l'action.
+
+Déployer le backend 18.5 avant ces écrans. Il contrôle la propriété du rendez-vous, l'enregistrement dans l'établissement, l'affectation du professionnel et le créneau au moment de la réservation. Les anciennes routes sont également protégées contre les accès à un autre patient. Les créneaux affichés peuvent être pris entre la recherche et la confirmation : un conflit impose d'actualiser les disponibilités.

@@ -8,6 +8,9 @@ import '../../features/auth/presentation/auth_page.dart';
 import '../../features/auth/presentation/profile_page.dart';
 
 import '../../features/home/presentation/home_page.dart';
+import '../../features/appointments/presentation/appointments_page.dart';
+import '../../features/appointments/presentation/appointment_detail_page.dart';
+import '../../features/appointments/presentation/appointment_booking_page.dart';
 import '../../features/patient/presentation/medical_record_page.dart';
 import '../../features/settings/presentation/settings_page.dart';
 
@@ -46,6 +49,28 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/medical-record',
         name: 'medical-record',
         builder: (_, _) => const MedicalRecordPage(),
+      ),
+      GoRoute(
+        path: '/appointments',
+        name: 'appointments',
+        builder: (_, _) => const AppointmentsPage(),
+      ),
+      GoRoute(
+        path: '/appointments/new',
+        name: 'appointment-book',
+        builder: (_, _) => const AppointmentBookingPage(),
+      ),
+      GoRoute(
+        path: '/appointments/:id/reschedule',
+        name: 'appointment-reschedule',
+        builder: (_, state) =>
+            AppointmentBookingPage(appointmentId: state.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: '/appointments/:id',
+        name: 'appointment-detail',
+        builder: (_, state) =>
+            AppointmentDetailPage(id: state.pathParameters['id']!),
       ),
       GoRoute(
         path: '/settings',
@@ -90,15 +115,26 @@ String safeReturnPath(String? value) {
   if (uri == null ||
       uri.hasScheme ||
       uri.hasAuthority ||
-      !const {
-        '/',
-        '/settings',
-        '/profile',
-        '/medical-record',
-      }.contains(uri.path)) {
+      !_knownReturnPath(uri.path)) {
     return '/';
   }
   return uri.path;
+}
+
+bool _knownReturnPath(String path) {
+  if (const {
+    '/',
+    '/settings',
+    '/profile',
+    '/medical-record',
+    '/appointments',
+    '/appointments/new',
+  }.contains(path)) {
+    return true;
+  }
+  return RegExp(
+    r'^/appointments/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}(?:/reschedule)?$',
+  ).hasMatch(path);
 }
 
 class _SessionRouterRefresh extends ChangeNotifier {

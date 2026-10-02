@@ -66,6 +66,12 @@ class HomePage extends ConsumerWidget {
                     PatientInsuranceSection(dashboard: dashboard),
                     PatientAlertsSection(dashboard: dashboard),
                     const SizedBox(height: 12),
+                    OutlinedButton.icon(
+                      onPressed: () => context.pushNamed('appointments'),
+                      icon: const Icon(Icons.event_outlined),
+                      label: Text(fr ? 'Mes rendez-vous' : 'My appointments'),
+                    ),
+                    const SizedBox(height: 12),
                     FilledButton.icon(
                       onPressed: () => context.pushNamed('medical-record'),
                       icon: const Icon(Icons.folder_open_outlined),

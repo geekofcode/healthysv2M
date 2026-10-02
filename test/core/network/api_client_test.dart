@@ -147,6 +147,45 @@ void main() {
       expect(adapter.requests, isEmpty);
     },
   );
+  test(
+    'mutation opt-out refreshes credentials without replaying a booking',
+    () async {
+      adapter.statuses = [401, 200];
+      var token = 'old';
+      var refreshes = 0;
+      dio.close();
+      dio = createApiClient(
+        baseUrl: Uri.parse('https://api.healthys.test/api/v1'),
+        tokenStore: tokens,
+        accessToken: ({bool forceRefresh = false}) async {
+          if (forceRefresh) {
+            token = 'new';
+            refreshes++;
+          }
+          return token;
+        },
+      )..httpClientAdapter = adapter;
+      await expectLater(
+        dio.post(
+          'patients/me/appointments',
+          data: {'reason': 'Consultation'},
+          options: Options(extra: {'retryOnUnauthorized': false}),
+        ),
+        throwsA(
+          isA<DioException>().having(
+            (e) => e.response?.statusCode,
+            'status',
+            401,
+          ),
+        ),
+      );
+      expect(adapter.requests, hasLength(1));
+      expect(refreshes, 1);
+      await dio.get('patients/me/appointments');
+      expect(adapter.requests.last.headers['Authorization'], 'Bearer new');
+    },
+  );
+
   test('401 refreshes once and retries using rotated token', () async {
     var token = 'old';
     var refreshes = 0;

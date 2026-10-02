@@ -183,8 +183,11 @@ class ApiInterceptor extends Interceptor {
           if (!_sameSession(request) || token == null) {
             throw SessionExpiredException();
           }
-          // Streams cannot be replayed safely. Let callers retry their upload.
-          if (request.data is! Stream && request.data is! FormData) {
+          // Mutations may opt out: refresh credentials without repeating an action.
+          // Streams cannot be replayed safely either.
+          if (request.extra['retryOnUnauthorized'] != false &&
+              request.data is! Stream &&
+              request.data is! FormData) {
             final retry = request.copyWith(
               extra: {...request.extra, _retryKey: true},
               data: request.data,
