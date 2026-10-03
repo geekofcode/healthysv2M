@@ -136,7 +136,7 @@ class LiveKitTeleconsultationMedia implements TeleconsultationMedia {
         for (final participant in _room.remoteParticipants.values) {
           for (final publication in participant.videoTrackPublications) {
             final track = publication.track;
-            if (!publication.muted && track is lk.VideoTrack) {
+            if (!publication.muted && track != null) {
               tracks.add(track);
             }
           }
