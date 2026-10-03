@@ -124,7 +124,12 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('Sign in'));
     await tester.pumpAndSettle();
-    await tester.tap(find.byIcon(Icons.person_outline));
+    await tester.tap(
+      find.descendant(
+        of: find.byType(AppBar),
+        matching: find.byIcon(Icons.person_outline),
+      ),
+    );
     await tester.pumpAndSettle();
     expect(find.text('Ada Lovelace'), findsOneWidget);
     expect(find.text('P1'), findsOneWidget);

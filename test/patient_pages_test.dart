@@ -268,7 +268,14 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      await tester.scrollUntilVisible(find.text('Open my medical record'), 400);
+      await tester.scrollUntilVisible(
+        find.text('Open my medical record'),
+        400,
+        scrollable: find.descendant(
+          of: find.byType(HomePage),
+          matching: find.byType(Scrollable),
+        ),
+      );
       await tester.ensureVisible(find.text('Open my medical record'));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Open my medical record'));

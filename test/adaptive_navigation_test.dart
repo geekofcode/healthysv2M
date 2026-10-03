@@ -172,6 +172,11 @@ void main() {
     router.pushNamed('appointments');
     await tester.pumpAndSettle();
     expect(router.canPop(), isTrue);
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+    expect(find.byType(HomePage), findsOneWidget);
+    router.pushNamed('appointments');
+    await tester.pumpAndSettle();
     router.pushNamed(
       'appointment-detail',
       pathParameters: {'id': fixtures.appointmentId},

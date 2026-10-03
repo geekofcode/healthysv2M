@@ -69,12 +69,18 @@ class AdaptivePatientShell extends StatelessWidget {
                           key: ValueKey(master!.path),
                           child: Column(
                             children: [
-                              if (!split &&
-                                  GoRouter.maybeOf(context)?.canPop() == true)
+                              if (!split)
                                 Align(
                                   alignment: Alignment.centerLeft,
                                   child: BackButton(
-                                    onPressed: () => context.pop(),
+                                    onPressed: () {
+                                      final router = GoRouter.of(context);
+                                      if (router.canPop()) {
+                                        router.pop();
+                                      } else {
+                                        router.go('/');
+                                      }
+                                    },
                                   ),
                                 ),
                               Expanded(

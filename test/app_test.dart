@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:healthysv2/app/healthys_app.dart';
+import 'package:healthysv2/features/settings/presentation/settings_page.dart';
 import 'package:healthysv2/core/config/app_config.dart';
 import 'package:healthysv2/core/preferences/app_preferences.dart';
 import 'package:healthysv2/features/auth/application/session_controller.dart';
@@ -41,7 +42,14 @@ void main() {
     expect(find.text("HEALTH'YS"), findsOneWidget);
     await tester.tap(find.byIcon(Icons.settings_outlined));
     await tester.pumpAndSettle();
-    await tester.scrollUntilVisible(find.text('dev'), 200);
+    await tester.scrollUntilVisible(
+      find.text('dev'),
+      200,
+      scrollable: find.descendant(
+        of: find.byType(SettingsPage),
+        matching: find.byType(Scrollable),
+      ),
+    );
     expect(find.text('dev'), findsOneWidget);
     await tester.pageBack();
     await tester.pumpAndSettle();
