@@ -1,0 +1,42 @@
+openapi: 3.0.3
+info:
+  title: HEALTH'YS bootstrap contract
+  version: 0.1.0
+  description: >-
+    Bootstrap schema subset derived from geekofcode/healthysv2 commit
+    8ff6b420b818f2bb00353969599814ee074aa1e5. This is NOT the complete
+    backend contract. Replace it with the backend /v3/api-docs export
+    before implementing business endpoints. No endpoints are invented.
+paths: {}
+components:
+  schemas:
+    FieldViolation:
+      type: object
+      properties:
+        field:
+          type: string
+        message:
+          type: string
+    ErrorResponse:
+      type: object
+      required: [status, violations]
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+        status:
+          type: integer
+        error:
+          type: string
+        code:
+          type: string
+        message:
+          type: string
+        path:
+          type: string
+        correlationId:
+          type: string
+        violations:
+          type: array
+          items:
+            $ref: '#/components/schemas/FieldViolation'

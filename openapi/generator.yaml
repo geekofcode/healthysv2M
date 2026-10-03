@@ -1,0 +1,5 @@
+pubName: healthys_api
+pubVersion: 0.1.0
+pubDescription: Generated HEALTH'YS API contract models and Dio client.
+serializationLibrary: json_serializable
+hideGenerationTimestamp: true
