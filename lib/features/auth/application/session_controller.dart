@@ -29,6 +29,21 @@ final profileClientProvider = Provider<ProfileClient>((ref) {
   ref.onDispose(() => dio.close(force: true));
   return DioProfileClient(dio);
 });
+final sessionEndHooksProvider = Provider<SessionEndHooks>(
+  (ref) => SessionEndHooks(),
+);
+
+class SessionEndHooks {
+  final Set<Future<void> Function(String?)> callbacks = {};
+  Future<void> run(String? token) async {
+    for (final callback in callbacks.toList()) {
+      try {
+        await callback(token).timeout(const Duration(seconds: 3));
+      } catch (_) {}
+    }
+  }
+}
+
 final sessionControllerProvider =
     NotifierProvider<SessionController, SessionState>(SessionController.new);
 
@@ -245,13 +260,16 @@ class SessionController extends Notifier<SessionState> {
   }
 
   Future<void> expire() async {
+    final oldToken = _tokens?.accessToken;
+    final cleanup = ref.read(sessionEndHooksProvider);
     final generation = ++_generation;
     _refreshing = null;
     _timer?.cancel();
     _tokens = null;
     state = const SessionState(status: SessionStatus.expired);
     try {
-      await _clear();
+      final clearing = _clear();
+      await Future.wait([clearing, cleanup.run(oldToken)]);
     } catch (_) {
       if (!_active(generation)) return;
       state = const SessionState(
@@ -265,6 +283,8 @@ class SessionController extends Notifier<SessionState> {
   }
 
   Future<void> logout() async {
+    final oldToken = _tokens?.accessToken;
+    final cleanup = ref.read(sessionEndHooksProvider);
     final idToken = _tokens?.idToken ?? _pendingLogoutIdToken;
     _pendingLogoutIdToken = idToken;
     final generation = ++_generation;
@@ -273,7 +293,8 @@ class SessionController extends Notifier<SessionState> {
     _tokens = null;
     state = const SessionState(status: SessionStatus.signedOut);
     try {
-      await _clear();
+      final clearing = _clear();
+      await Future.wait([clearing, cleanup.run(oldToken)]);
     } catch (_) {
       if (!_active(generation)) return;
       state = const SessionState(

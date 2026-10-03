@@ -4,6 +4,12 @@ plugins {
     id("dev.flutter.flutter-gradle-plugin")
 }
 
+// Native resources initialize Firebase before Dart when Android wakes a killed app.
+// Deployment supplies the genuine project file; unconfigured builds remain usable.
+if (file("google-services.json").exists()) {
+    apply(plugin = "com.google.gms.google-services")
+}
+
 android {
     namespace = "com.example.healthysv2"
     compileSdk = flutter.compileSdkVersion

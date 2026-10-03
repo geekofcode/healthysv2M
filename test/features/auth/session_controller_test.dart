@@ -207,4 +207,21 @@ void main() {
       expect(container.read(sessionControllerProvider).isAuthenticated, true);
     },
   );
+  test('Delayed push cleanup cannot erase a newly logged in session', () async {
+    final session = await controller();
+    await session.login();
+    final delayed = Completer<void>();
+    container
+        .read(sessionEndHooksProvider)
+        .callbacks
+        .add((_) => delayed.future);
+    final signingOut = session.logout();
+    await Future<void>.delayed(Duration.zero);
+    await session.login();
+    expect(store.tokens?.accessToken, 'fresh');
+    delayed.complete();
+    await signingOut;
+    expect(store.tokens?.accessToken, 'fresh');
+    expect(container.read(sessionControllerProvider).isAuthenticated, true);
+  });
 }

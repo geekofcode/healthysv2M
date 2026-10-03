@@ -18,6 +18,11 @@ class HomePage extends ConsumerWidget {
         title: const Text("HEALTH'YS"),
         actions: [
           IconButton(
+            onPressed: () => context.pushNamed('notifications'),
+            tooltip: fr ? 'Notifications' : 'Notifications',
+            icon: const Icon(Icons.notifications_outlined),
+          ),
+          IconButton(
             onPressed: () => context.pushNamed('profile'),
             tooltip: fr ? 'Profil' : 'Profile',
             icon: const Icon(Icons.person_outline),

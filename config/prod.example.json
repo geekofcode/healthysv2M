@@ -4,5 +4,11 @@
   "OIDC_ISSUER": "https://keycloak.wouri.tv/realms/healthys",
   "OIDC_CLIENT_ID": "healthys-mobile-apps",
   "OIDC_REDIRECT_URI": "healthys://oauth/callback",
-  "OIDC_POST_LOGOUT_REDIRECT_URI": "healthys://oauth/callback"
+  "OIDC_POST_LOGOUT_REDIRECT_URI": "healthys://oauth/callback",
+  "PUSH_ENABLED": false,
+  "FIREBASE_API_KEY": "",
+  "FIREBASE_APP_ID": "",
+  "FIREBASE_MESSAGING_SENDER_ID": "",
+  "FIREBASE_PROJECT_ID": "",
+  "FIREBASE_IOS_BUNDLE_ID": ""
 }

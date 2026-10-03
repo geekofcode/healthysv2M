@@ -1,4 +1,4 @@
-# HEALTH’YS mobile — socle 18.1, authentification 18.2 et espace patient 18.3–18.5
+# HEALTH’YS mobile — socle et parcours patient 18.1–18.10
 
 Application Flutter Android/iOS. Architecture par fonctionnalité, Riverpod pour injection/état, GoRouter pour navigation et Dio pour HTTP. Le thème Material 3 reprend le vert `#087f5b` du frontend HEALTH’YS et suit le mode clair/sombre du système. Interface initiale FR/EN selon la langue du téléphone, anglais par défaut.
 
@@ -125,7 +125,7 @@ Les endpoints authentifiés sont `GET /api/v1/patients/me/consultations`, `/cons
 
 Seuls les documents actifs partagés du patient connecté sont accessibles. Aucune clé de stockage ni URL publique n'est exposée. Le transport contrôle le type, la signature et la taille (25 Mio maximum). Les données en mémoire et les téléchargements sont liés à la session. Le lecteur PDF utilise un fichier temporaire privé supprimé à sa fermeture ; les restes éventuels sont nettoyés au démarrage. Les fichiers enregistrés volontairement dans un emplacement choisi par l'utilisateur y restent disponibles.
 
-Le sélecteur de fichiers impose désormais **iOS 14 minimum**. La CI compile Android ; la visualisation PDF et le sélecteur natif doivent aussi être validés sur appareils Android/iOS avec le backend déployé.
+Le sélecteur de fichiers impose iOS 14 minimum ; l’intégration Firebase 18.10 relève la cible du projet à **iOS 15**. La CI compile Android ; la visualisation PDF et le sélecteur natif doivent aussi être validés sur appareils Android/iOS avec le backend déployé.
 
 ## Laboratoire et prescriptions (18.7)
 
@@ -154,3 +154,17 @@ La fermeture d’un écran, la mise en arrière-plan et la fin de session arrêt
 Déployer les changements API 18.9 avant ces écrans. Les contrôles serveur limitent chaque conversation et chaque pièce jointe aux participants actifs. Les tests automatisés valident les contrats, le codec et les transitions de connexion ; les parcours natifs de sélection de fichier et la connexion au serveur déployé doivent également être vérifiés sur Android/iOS.
 
 La création d’une conversation sélectionne un professionnel nommé parmi les relations de soins actives du patient (`conversations/recipients`). L’annuaire n’expose pas tous les utilisateurs. Le statut de lecture d’un message envoyé repose sur les accusés des autres participants, et non sur la lecture par l’expéditeur lui-même.
+
+## Notifications push et préférences (18.10)
+
+La cloche de l’accueil ouvre l’historique paginé, le filtre non-lu, la lecture et les détails. Les paramètres permettent d’activer les notifications sur l’appareil, de les désactiver et de modifier les préférences in-app. L’application distingue une permission refusée, une configuration indisponible et un échec d’enregistrement. Les préférences existantes de courriel/SMS et les heures de silence sont conservées ; les horaires affichés sont UTC. Ces préférences ne mettent pas en place de fournisseur courriel/SMS.
+
+Le push est **désactivé par défaut** (`PUSH_ENABLED=false`). Pour un build connecté, enregistrer les applications Android/iOS dans Firebase avec leurs véritables identifiants, puis fournir les fichiers publics de configuration `android/app/google-services.json` et `ios/Runner/GoogleService-Info.plist` (ignorés par Git). Le build Android applique le plugin Google Services lorsque le fichier existe ; le build iOS copie le plist et configure Firebase avant le démarrage Flutter, ce qui permet l’initialisation native lorsque le système réveille l’application.
+
+Dans le fichier dart-define correspondant, définir `PUSH_ENABLED=true`, `FIREBASE_API_KEY`, `FIREBASE_APP_ID`, `FIREBASE_MESSAGING_SENDER_ID`, `FIREBASE_PROJECT_ID` et, pour iOS, `FIREBASE_IOS_BUNDLE_ID`. Les valeurs doivent correspondre aux fichiers natifs du même environnement et de la même plateforme ; l’App ID Firebase Android diffère de celui d’iOS. Aucun compte de service ni clé APNs privée ne doit figurer dans ces fichiers.
+
+Android utilise le canal `healthys_notifications` et demande la permission système par une action explicite. Sur iOS, activer Push Notifications pour l’App ID et la signature, conserver le swizzling Firebase, puis déposer la clé d’authentification APNs dans Firebase. Le projet cible iOS 15 et fournit les entitlements APNs (`development` en Debug, `production` en Release/Profile). Le token APNs doit être disponible avant la récupération du token FCM. La configuration native seule ne déclenche pas de demande de permission ; l’auto-initialisation FCM est désactivée jusqu’à l’activation par l’utilisateur.
+
+Déployer le backend 18.10 et sa migration V17 : enregistrement/rotation du token d’appareil, révocation et envoi FCM HTTP v1. L’UUID d’installation et la capacité de révocation sont conservés dans le stockage sécurisé. Une déconnexion ou expiration supprime le token local et tente la révocation serveur ; si le réseau manque, la révocation reste en attente et doit réussir avant un nouvel enregistrement. Une révocation hors ligne ne peut pas être confirmée immédiatement au serveur.
+
+Les alertes sur écran verrouillé contiennent seulement un texte générique HEALTH’YS et une référence de notification. En premier plan, une bannière générique et les compteurs sont actualisés. Après un appui, y compris au démarrage à froid, l’application vérifie la session et récupère la notification auprès du serveur avant d’ouvrir une route patient autorisée. Les URL contenues dans un payload sont ignorées. Les tests automatisés injectent Firebase et le serveur ; la CI compile Android. La réception réelle FCM/APNs, les permissions et les ouvertures à froid doivent être validées sur des appareils configurés ; aucun certificat ni compte Firebase/APNs n’est créé automatiquement.

@@ -8,6 +8,9 @@ import '../../features/auth/presentation/auth_page.dart';
 import '../../features/auth/presentation/profile_page.dart';
 
 import '../../features/home/presentation/home_page.dart';
+import '../../features/notifications/presentation/notifications_page.dart';
+import '../../features/notifications/presentation/notification_detail_page.dart';
+import '../../features/notifications/presentation/notification_preferences_page.dart';
 import '../../features/messaging/presentation/conversations_page.dart';
 import '../../features/messaging/presentation/conversation_page.dart';
 import '../../features/messaging/presentation/new_conversation_page.dart';
@@ -49,6 +52,22 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       return null;
     },
     routes: [
+      GoRoute(
+        path: '/notifications',
+        name: 'notifications',
+        builder: (_, _) => const NotificationsPage(),
+      ),
+      GoRoute(
+        path: '/notification-preferences',
+        name: 'notification-preferences',
+        builder: (_, _) => const NotificationPreferencesPage(),
+      ),
+      GoRoute(
+        path: '/notifications/:id',
+        name: 'notification-detail',
+        builder: (_, state) =>
+            NotificationDetailPage(id: state.pathParameters['id']!),
+      ),
       GoRoute(
         path: '/login',
         name: 'login',
@@ -237,6 +256,8 @@ bool _knownReturnPath(String path) {
     '/maternal-child',
     '/messages',
     '/messages/new',
+    '/notifications',
+    '/notification-preferences',
   }.contains(path)) {
     return true;
   }
@@ -246,7 +267,7 @@ bool _knownReturnPath(String path) {
       RegExp('^/consultations/$uuid(?:/documents)?\$').hasMatch(path) ||
       RegExp('^/documents/$uuid/view\$').hasMatch(path) ||
       RegExp(
-        '^/(?:lab-results|prescriptions|messages)/$uuid\$',
+        '^/(?:lab-results|prescriptions|messages|notifications)/$uuid\$',
       ).hasMatch(path) ||
       RegExp(
         '^/maternal-child/(?:pregnancies|children)/$uuid\$',

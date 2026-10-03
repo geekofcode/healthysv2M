@@ -18,6 +18,15 @@ class SettingsPage extends ConsumerWidget {
         child: ListView(
           children: [
             ListTile(
+              leading: const Icon(Icons.notifications_outlined),
+              title: Text(
+                french
+                    ? 'Préférences de notification'
+                    : 'Notification preferences',
+              ),
+              onTap: () => context.pushNamed('notification-preferences'),
+            ),
+            ListTile(
               leading: const Icon(Icons.person_outline),
               title: Text(french ? 'Mon profil' : 'My profile'),
               onTap: () => context.pushNamed('profile'),

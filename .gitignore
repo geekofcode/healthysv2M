@@ -47,3 +47,7 @@ app.*.map.json
 # Local environment overrides (dart defines are not secrets)
 config/prod.json
 config/*.local.json
+
+# Deployment Firebase project configuration (supplied per native application)
+/android/app/google-services.json
+/ios/Runner/GoogleService-Info.plist
