@@ -13,6 +13,8 @@ dependencies:
     sdk: flutter
   healthys_api:
     path: packages/healthys_api
+  livekit_client: ^2.13.0
+  permission_handler: ^13.0.2
   firebase_core: ^4.15.0
   firebase_messaging: ^16.7.0
   dio: ^5.9.0
