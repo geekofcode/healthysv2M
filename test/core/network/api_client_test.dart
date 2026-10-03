@@ -32,6 +32,7 @@ class RecordingAdapter implements HttpClientAdapter {
   int status = 200;
   List<int> statuses = [];
   Completer<void>? pending;
+  Completer<void>? entered;
   DioExceptionType? failureType;
   @override
   Future<ResponseBody> fetch(
@@ -40,6 +41,7 @@ class RecordingAdapter implements HttpClientAdapter {
     Future<void>? cancelFuture,
   ) async {
     requests.add(options);
+    entered?.complete();
     await pending?.future;
     if (failureType != null) {
       throw DioException(
@@ -332,6 +334,7 @@ void main() {
       )..httpClientAdapter = adapter;
       adapter.status = status;
       adapter.pending = Completer<void>();
+      adapter.entered = Completer<void>();
       final request = dio.get('patients/me');
       final expectation = expectLater(
         request,
@@ -341,7 +344,7 @@ void main() {
               .having((e) => e.response, 'previous account response', isNull),
         ),
       );
-      await Future<void>.delayed(Duration.zero);
+      await adapter.entered!.future;
       expect(adapter.requests, hasLength(1));
       revision++;
       adapter.pending!.complete();
@@ -369,13 +372,17 @@ void main() {
     () async {
       var revision = 1;
       final pending = Completer<String?>();
+      final refreshEntered = Completer<void>();
       dio.close();
       dio = createApiClient(
         baseUrl: Uri.parse('https://api.healthys.test/api/v1'),
         tokenStore: tokens,
         sessionRevision: () => revision,
-        accessToken: ({bool forceRefresh = false}) async =>
-            forceRefresh ? pending.future : 'old',
+        accessToken: ({bool forceRefresh = false}) async {
+          if (!forceRefresh) return 'old';
+          refreshEntered.complete();
+          return pending.future;
+        },
       )..httpClientAdapter = adapter;
       adapter.status = 401;
       final request = dio.get('patients/me');
@@ -387,7 +394,7 @@ void main() {
               .having((e) => e.response, 'previous response', isNull),
         ),
       );
-      await Future<void>.delayed(Duration.zero);
+      await refreshEntered.future;
       revision++;
       pending.complete('new-account-token');
       await expectation;

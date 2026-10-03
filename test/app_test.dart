@@ -94,7 +94,8 @@ void main() {
       Theme.of(tester.element(find.text('Paramètres'))).brightness,
       Brightness.light,
     );
-    await tester.pageBack();
+    // pageBack searches the English tooltip; the app is now in French.
+    await tester.tap(find.byType(BackButton));
     await tester.pumpAndSettle();
     expect(find.byIcon(Icons.settings_outlined), findsOneWidget);
   });
