@@ -1,3 +1,5 @@
+import 'dart:async';
+import 'package:healthysv2/app/healthys_app.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -31,6 +33,8 @@ class FakePushController extends PushController {
   FakePushController(this.initial);
   final PushStatus initial;
   int enableCalls = 0;
+  void opened(String id) =>
+      state = PushState(status: state.status, pendingNotificationId: id);
   @override
   PushState build() => PushState(status: initial);
   @override
@@ -135,12 +139,18 @@ class PageRepository implements NotificationRepository {
   }
 
   @override
-  Future<void> registerDevice(
+  Future<String> registerDevice(
     String installationId,
     String token,
-    String platform, {
+    String platform,
+    String revocationToken, {
     CancelToken? cancelToken,
-  }) async {}
+  }) async => revocationToken;
+  @override
+  Future<void> revokeDevice(
+    String installationId,
+    String revocationToken,
+  ) async {}
   @override
   Future<void> unregisterDevice(
     String installationId, {
@@ -210,6 +220,57 @@ Future<ProviderContainer> pumpNotifications(
 }
 
 void main() {
+  testWidgets('cold push tap opens authenticated server resource from home', (
+    tester,
+  ) async {
+    final repository = PageRepository();
+    final push = FakePushController(PushStatus.idle);
+    final router = GoRouter(
+      routes: [
+        GoRoute(
+          path: '/',
+          builder: (_, _) => const Scaffold(body: Text('Patient home')),
+        ),
+        GoRoute(
+          path: '/appointments/:id',
+          builder: (_, state) => Scaffold(
+            body: Text('Verified appointment ${state.pathParameters['id']}'),
+          ),
+        ),
+      ],
+    );
+    final container = ProviderContainer(
+      overrides: [
+        sessionControllerProvider.overrideWith(NotificationSession.new),
+        notificationRepositoryProvider.overrideWithValue(repository),
+        pushControllerProvider.overrideWith(() => push),
+        appRouterProvider.overrideWithValue(router),
+      ],
+    );
+    addTearDown(container.dispose);
+    addTearDown(router.dispose);
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: const HealthysApp(),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Patient home'), findsOneWidget);
+    // Firebase initialNotificationId resolves asynchronously after startup.
+    scheduleMicrotask(() => push.opened(notificationId));
+    await tester.pumpAndSettle();
+    expect(find.text('Verified appointment $resourceId'), findsOneWidget);
+    expect(repository.read, isTrue);
+    expect(
+      container.read(pushControllerProvider).pendingNotificationId,
+      isNull,
+    );
+    expect(
+      router.routeInformationProvider.value.uri.path,
+      '/appointments/$resourceId',
+    );
+  });
   testWidgets('notification list paginates and unread filter resets the page', (
     tester,
   ) async {

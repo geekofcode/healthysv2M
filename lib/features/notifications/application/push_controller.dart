@@ -122,18 +122,7 @@ class PushController extends Notifier<PushState> {
       }
       _subscriptions.add(_client!.openedIds.listen(_opened));
       _subscriptions.add(
-        _client!.foregroundIds.listen((id) {
-          if (!ref.read(sessionControllerProvider).isAuthenticated) {
-            return;
-          }
-          ref.invalidate(notificationsProvider);
-          ref.invalidate(notificationUnreadCountProvider);
-          state = PushState(
-            status: state.status,
-            pendingNotificationId: state.pendingNotificationId,
-            foregroundRevision: state.foregroundRevision + 1,
-          );
-        }),
+        _client!.foregroundIds.listen((id) => unawaited(_foreground(id))),
       );
       _subscriptions.add(
         _client!.tokenChanges.listen((token) {
@@ -151,6 +140,33 @@ class PushController extends Notifier<PushState> {
       if (!_disposed) {
         state = const PushState(status: PushStatus.unavailable);
       }
+    }
+  }
+
+  Future<void> _foreground(String id) async {
+    final generation = _generation;
+    if (!notificationUuid(id) || !_current(generation)) {
+      return;
+    }
+    try {
+      final preferences = await ref
+          .read(notificationRepositoryProvider)
+          .preferences();
+      if (!_current(generation)) {
+        return;
+      }
+      ref.invalidate(notificationsProvider);
+      ref.invalidate(notificationUnreadCountProvider);
+      if (!preferences.inAppEnabled) {
+        return;
+      }
+      state = PushState(
+        status: state.status,
+        pendingNotificationId: state.pendingNotificationId,
+        foregroundRevision: state.foregroundRevision + 1,
+      );
+    } catch (_) {
+      /* A failed preference lookup must not display a banner. */
     }
   }
 
@@ -188,6 +204,10 @@ class PushController extends Notifier<PushState> {
         return;
       }
       if (preferences.pushEnabled) {
+        await _queue;
+        if (!_current(generation)) {
+          return;
+        }
         final token = await _client!.token();
         if (!_current(generation)) {
           return;
@@ -242,6 +262,10 @@ class PushController extends Notifier<PushState> {
         return;
       }
       ref.invalidate(notificationPreferencesProvider);
+      await _queue;
+      if (!_current(generation)) {
+        return;
+      }
       final token = await _client!.token();
       if (!_current(generation)) {
         return;

@@ -25,7 +25,7 @@ Map<String, dynamic> json({String resource = 'CONVERSATION'}) => {
   'status': 'ACTIVE',
   'read': false,
 };
-const preferences = NotificationPreferences(
+const defaultPreferences = NotificationPreferences(
   inAppEnabled: true,
   emailEnabled: true,
   smsEnabled: false,
@@ -49,7 +49,7 @@ class Session extends SessionController {
 }
 
 class Repository implements NotificationRepository {
-  NotificationPreferences prefs = preferences;
+  NotificationPreferences prefs = defaultPreferences;
   Completer<HealthysNotification>? pendingDetail;
   int registrations = 0, revocations = 0, reads = 0;
   bool failRegister = false, failRevoke = false;
@@ -201,8 +201,11 @@ void main() {
     );
   });
   test('Preferences preserve non-push channels and UTC quiet hours', () {
-    final updated = preferences.copyWith(pushEnabled: true);
-    expect(updated.toJson(), {...preferences.toJson(), 'pushEnabled': true});
+    final updated = defaultPreferences.copyWith(pushEnabled: true);
+    expect(updated.toJson(), {
+      ...defaultPreferences.toJson(),
+      'pushEnabled': true,
+    });
   });
   test('Timestamp timezone required', () {
     expect(
@@ -293,6 +296,12 @@ void main() {
       repository.failRegister = false;
       await container.read(pushControllerProvider.notifier).resume();
       expect(repository.capabilities[0], repository.capabilities[1]);
+    });
+    test('Disabled in-app preference suppresses foreground banner', () async {
+      repository.prefs = defaultPreferences.copyWith(inAppEnabled: false);
+      client.foreground.add(id);
+      await flush();
+      expect(container.read(pushControllerProvider).foregroundRevision, 0);
     });
     test(
       'Signed out foreground push exposes no notification revision',
