@@ -51,6 +51,8 @@ class LiveKitTeleconsultationMedia implements TeleconsultationMedia {
   lk.EventsListener<lk.RoomEvent>? _listener;
   bool _closed = false;
   bool _frontCamera = true;
+  Future<void> _operations = Future<void>.value();
+  Future<void>? _closing;
   @override
   Stream<MediaConnection> get events => _events.stream;
   @override
@@ -77,24 +79,26 @@ class LiveKitTeleconsultationMedia implements TeleconsultationMedia {
     }
   }
 
+  Future<void> _operate(Future<void> Function() action) {
+    final operation = _operations.then((_) async {
+      if (!_closed) {
+        await action().timeout(const Duration(seconds: 10));
+      }
+    });
+    _operations = operation.catchError((Object _) {});
+    return operation;
+  }
+
   @override
-  Future<void> setCamera(bool enabled) async {
-    if (_closed && enabled) {
-      return;
-    }
+  Future<void> setCamera(bool enabled) => _operate(() async {
     await _room.localParticipant?.setCameraEnabled(enabled);
-  }
-
+  });
   @override
-  Future<void> setMicrophone(bool enabled) async {
-    if (_closed && enabled) {
-      return;
-    }
+  Future<void> setMicrophone(bool enabled) => _operate(() async {
     await _room.localParticipant?.setMicrophoneEnabled(enabled);
-  }
-
+  });
   @override
-  Future<void> switchCamera() async {
+  Future<void> switchCamera() => _operate(() async {
     final tracks = _room.localParticipant?.videoTrackPublications;
     if (tracks == null) {
       return;
@@ -109,7 +113,7 @@ class LiveKitTeleconsultationMedia implements TeleconsultationMedia {
         break;
       }
     }
-  }
+  });
 
   @override
   bool get hasRemoteVideo => _room.remoteParticipants.values.any(
@@ -135,29 +139,49 @@ class LiveKitTeleconsultationMedia implements TeleconsultationMedia {
     },
   );
   @override
-  Future<void> close() async {
-    if (_closed) {
-      return;
+  Future<void> close() {
+    if (_closing != null) {
+      return _closing!;
     }
     _closed = true;
-    // Disconnect stops and disposes locally published tracks, even on mute failure.
+    return _closing = _stopAndClose();
+  }
+
+  Future<void> _stopPublishedTracks() async {
+    final participant = _room.localParticipant;
+    if (participant == null) {
+      return;
+    }
+    await Future.wait(
+      [
+        ...participant.videoTrackPublications,
+        ...participant.audioTrackPublications,
+      ].map((publication) async {
+        await publication.track?.stop();
+      }),
+    ).timeout(const Duration(seconds: 3));
+  }
+
+  Future<void> _stopAndClose() async {
+    // Stop current capture immediately, then stop tracks created by a late publish.
     try {
-      final participant = _room.localParticipant;
-      if (participant != null) {
-        await Future.wait(
-          [
-            ...participant.videoTrackPublications,
-            ...participant.audioTrackPublications,
-          ].map((publication) async {
-            await publication.track?.stop();
-          }),
-        );
-      }
+      await _stopPublishedTracks();
+    } catch (_) {}
+    try {
+      await _operations.timeout(const Duration(seconds: 3));
+    } catch (_) {}
+    try {
+      await _stopPublishedTracks();
+    } catch (_) {}
+    try {
       await _room.disconnect().timeout(const Duration(seconds: 3));
     } finally {
       await _listener?.dispose();
-      await _room.dispose();
-      await _events.close();
+      try {
+        await _room.dispose().timeout(const Duration(seconds: 5));
+      } finally {
+        await _events.close();
+      }
     }
   }
 }
