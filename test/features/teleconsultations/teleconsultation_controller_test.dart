@@ -413,4 +413,20 @@ void main() {
       expect(current().error?.statusCode, 403);
     },
   );
+  test('active session losing admission stops both media tracks', () async {
+    await call.join(camera: true, microphone: true);
+    repository.session = const VideoSession(
+      id: 'session',
+      sessionNumber: 'V-1',
+      status: 'ACTIVE',
+      canJoin: false,
+    );
+    await call.refresh();
+    expect(current().phase, CallPhase.interrupted);
+    expect(current().session?.canJoin, false);
+    expect(current().media, null);
+    expect(media.camera, false);
+    expect(media.microphone, false);
+    expect(repository.leaves, 0);
+  });
 }

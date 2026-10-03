@@ -189,9 +189,16 @@ class TeleconsultationController extends Notifier<CallState> {
       if (session.isEnded) {
         _refreshing = false;
         final endedEpoch = ++_epoch;
-        await _closeMedia();
         if (_current(endedEpoch)) {
           state = CallState(phase: CallPhase.ended, session: session);
+        }
+        await _closeMedia();
+      } else if (!session.canJoin && _media != null) {
+        final interruption = interrupt();
+        final interruptedEpoch = _epoch;
+        await interruption;
+        if (_current(interruptedEpoch)) {
+          state = CallState(phase: CallPhase.interrupted, session: session);
         }
       } else {
         final phase =
