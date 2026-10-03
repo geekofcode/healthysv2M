@@ -1,6 +1,6 @@
+import '../../../app/layout/adaptive_navigation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import '../application/consultation_providers.dart';
 import '../domain/consultation.dart';
 import 'clinical_async_view.dart';
@@ -64,6 +64,11 @@ class _ConsultationHistoryPageState
                       for (final consultation in data.content)
                         Card(
                           child: ListTile(
+                            selected: AdaptiveNavigation.isSelected(
+                              context,
+                              consultation.id,
+                              routePrefix: '/consultations',
+                            ),
                             leading: const Icon(
                               Icons.medical_services_outlined,
                             ),
@@ -87,7 +92,8 @@ class _ConsultationHistoryPageState
                               ].join('\n'),
                             ),
                             trailing: const Icon(Icons.chevron_right),
-                            onTap: () => context.pushNamed(
+                            onTap: () => AdaptiveNavigation.openDetail(
+                              context,
                               'consultation-detail',
                               pathParameters: {'id': consultation.id},
                             ),

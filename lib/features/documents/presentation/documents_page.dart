@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
+import '../../../app/layout/adaptive_navigation.dart';
 
 import '../../../core/errors/app_exception.dart';
 import '../../../core/errors/error_view.dart';
@@ -94,10 +94,20 @@ class _DocumentsPageState extends ConsumerState<DocumentsPage> {
                       for (final document in data.content)
                         _DocumentCard(
                           document: document,
+                          selected: AdaptiveNavigation.isSelected(
+                            context,
+                            document.id,
+                            routePrefix: '/documents',
+                          ),
                           busy: export.isLoading,
-                          onPreview: () => context.pushNamed(
+                          onPreview: () => AdaptiveNavigation.openDetail(
+                            context,
                             'document-preview',
                             pathParameters: {'id': document.id},
+                            queryParameters: {
+                              if (widget.consultationId != null)
+                                'consultation': widget.consultationId!,
+                            },
                           ),
                           onSave: () => _save(document),
                         ),
@@ -148,14 +158,17 @@ class _DocumentCard extends StatelessWidget {
     required this.busy,
     required this.onPreview,
     required this.onSave,
+    required this.selected,
   });
   final DocumentMetadata document;
   final bool busy;
+  final bool selected;
   final VoidCallback onPreview, onSave;
   @override
   Widget build(BuildContext context) {
     final fr = clinicalFrench(context);
     return Card(
+      color: selected ? Theme.of(context).colorScheme.secondaryContainer : null,
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(

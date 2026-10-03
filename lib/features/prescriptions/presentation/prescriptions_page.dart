@@ -1,6 +1,6 @@
+import '../../../app/layout/adaptive_navigation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import '../../consultations/presentation/clinical_async_view.dart';
 import '../application/prescription_providers.dart';
 import '../domain/prescription.dart';
@@ -60,6 +60,11 @@ class _PrescriptionsPageState extends ConsumerState<PrescriptionsPage> {
                       for (final prescription in data.content)
                         Card(
                           child: ListTile(
+                            selected: AdaptiveNavigation.isSelected(
+                              context,
+                              prescription.id,
+                              routePrefix: '/prescriptions',
+                            ),
                             leading: const Icon(Icons.medication_outlined),
                             title: Text(prescription.prescriptionNumber),
                             subtitle: Text(
@@ -80,7 +85,8 @@ class _PrescriptionsPageState extends ConsumerState<PrescriptionsPage> {
                               ].join('\n'),
                             ),
                             trailing: const Icon(Icons.chevron_right),
-                            onTap: () => context.pushNamed(
+                            onTap: () => AdaptiveNavigation.openDetail(
+                              context,
                               'prescription-detail',
                               pathParameters: {'id': prescription.id},
                             ),

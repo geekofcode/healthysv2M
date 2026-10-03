@@ -1,3 +1,4 @@
+import '../../../app/layout/adaptive_navigation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -36,7 +37,9 @@ class _ConversationsPageState extends ConsumerState<ConversationsPage>
     _resumed = state == AppLifecycleState.resumed;
     if (mounted) {
       final connection = ref.read(messagingListConnectionProvider.notifier);
-      if (_resumed && ModalRoute.of(context)?.isCurrent == true) {
+      if (_resumed &&
+          (ModalRoute.of(context)?.isCurrent == true &&
+              AdaptiveNavigation.masterVisible(context))) {
         connection.resume();
       } else {
         connection.suspend();
@@ -50,7 +53,10 @@ class _ConversationsPageState extends ConsumerState<ConversationsPage>
       if (!mounted) {
         return;
       }
-      final visible = _resumed && ModalRoute.of(context)?.isCurrent == true;
+      final visible =
+          _resumed &&
+          (ModalRoute.of(context)?.isCurrent == true &&
+              AdaptiveNavigation.masterVisible(context));
       if (visible != _visible) {
         _visible = visible;
         final connection = ref.read(messagingListConnectionProvider.notifier);
@@ -119,6 +125,11 @@ class _ConversationsPageState extends ConsumerState<ConversationsPage>
                       for (final conversation in data.content)
                         Card(
                           child: ListTile(
+                            selected: AdaptiveNavigation.isSelected(
+                              context,
+                              conversation.id,
+                              routePrefix: '/messages',
+                            ),
                             leading: const Icon(Icons.chat_bubble_outline),
                             title: Text(
                               conversation.subject?.trim().isNotEmpty == true
@@ -152,7 +163,8 @@ class _ConversationsPageState extends ConsumerState<ConversationsPage>
                                     ),
                                   )
                                 : const Icon(Icons.chevron_right),
-                            onTap: () => context.pushNamed(
+                            onTap: () => AdaptiveNavigation.openDetail(
+                              context,
                               'conversation',
                               pathParameters: {'id': conversation.id},
                             ),

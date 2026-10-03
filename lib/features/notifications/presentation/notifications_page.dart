@@ -1,3 +1,4 @@
+import '../../../app/layout/adaptive_navigation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -101,6 +102,11 @@ class _NotificationsPageState extends ConsumerState<NotificationsPage> {
                       for (final item in data.content)
                         Card(
                           child: ListTile(
+                            selected: AdaptiveNavigation.isSelected(
+                              context,
+                              item.id,
+                              routePrefix: '/notifications',
+                            ),
                             leading: Icon(
                               item.read
                                   ? Icons.notifications_none
@@ -120,7 +126,8 @@ class _NotificationsPageState extends ConsumerState<NotificationsPage> {
                               '${item.body}\n${clinicalDateTime(context, item.createdAt)}',
                             ),
                             trailing: const Icon(Icons.chevron_right),
-                            onTap: () => context.pushNamed(
+                            onTap: () => AdaptiveNavigation.openDetail(
+                              context,
                               'notification-detail',
                               pathParameters: {'id': item.id},
                             ),

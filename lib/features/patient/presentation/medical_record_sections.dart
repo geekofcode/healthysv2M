@@ -43,8 +43,7 @@ class MedicalRecordSections extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final fr = isFrench(context);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+    return PatientSectionsLayout(
       children: [
         PatientSection(
           title: fr ? 'Groupe sanguin' : 'Blood group',

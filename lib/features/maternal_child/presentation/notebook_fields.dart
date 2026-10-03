@@ -50,8 +50,7 @@ class BirthMeasurements extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final fr = clinicalFrench(context);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+    return PatientSectionsLayout(
       children: [
         PatientField(
           label: fr ? 'Ordre de naissance' : 'Birth order',

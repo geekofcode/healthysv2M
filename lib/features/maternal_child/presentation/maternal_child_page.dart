@@ -1,6 +1,6 @@
+import '../../../app/layout/adaptive_navigation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import '../../consultations/presentation/clinical_async_view.dart';
 import '../application/maternal_child_providers.dart';
 import '../domain/maternal_child.dart';
@@ -75,13 +75,19 @@ class _MaternalChildPageState extends ConsumerState<MaternalChildPage> {
                       for (final pregnancy in data.content)
                         Card(
                           child: ListTile(
+                            selected: AdaptiveNavigation.isSelected(
+                              context,
+                              pregnancy.id,
+                              routePrefix: '/maternal-child/pregnancies',
+                            ),
                             leading: const Icon(Icons.pregnant_woman_outlined),
                             title: Text(pregnancy.pregnancyNumber),
                             subtitle: Text(
                               '${notebookStatus(pregnancy.status, fr)}\n${fr ? 'Terme prévu' : 'Expected delivery'} : ${notebookDate(context, pregnancy.expectedDeliveryDate)}',
                             ),
                             trailing: const Icon(Icons.chevron_right),
-                            onTap: () => context.pushNamed(
+                            onTap: () => AdaptiveNavigation.openDetail(
+                              context,
                               'pregnancy-detail',
                               pathParameters: {'id': pregnancy.id},
                             ),
@@ -127,6 +133,11 @@ class _MaternalChildPageState extends ConsumerState<MaternalChildPage> {
                       for (final child in data.content)
                         Card(
                           child: ListTile(
+                            selected: AdaptiveNavigation.isSelected(
+                              context,
+                              child.childPatientId,
+                              routePrefix: '/maternal-child/children',
+                            ),
                             leading: const Icon(Icons.child_care_outlined),
                             title: Text(
                               [child.firstName, child.lastName]
@@ -144,7 +155,8 @@ class _MaternalChildPageState extends ConsumerState<MaternalChildPage> {
                               '${notebookDate(context, child.dateOfBirth)}\n${notebookStatus(child.status, fr)}',
                             ),
                             trailing: const Icon(Icons.chevron_right),
-                            onTap: () => context.pushNamed(
+                            onTap: () => AdaptiveNavigation.openDetail(
+                              context,
                               'child-detail',
                               pathParameters: {'id': child.childPatientId},
                             ),

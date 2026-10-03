@@ -220,185 +220,242 @@ class _ConversationPageState extends ConsumerState<ConversationPage>
     return Scaffold(
       appBar: AppBar(title: Text(fr ? 'Conversation' : 'Conversation')),
       body: SafeArea(
-        child: Column(
-          children: [
-            MessagingConnectionBanner(
-              status: connection.status,
-              onRetry: () => ref
-                  .read(messagingConnectionProvider(widget.id).notifier)
-                  .reconnect(),
-            ),
-            Expanded(
-              child: RefreshIndicator(
-                onRefresh: () async {
-                  ref.invalidate(detail);
-                  ref.invalidate(provider);
-                  try {
-                    await ref.read(provider.future);
-                  } catch (_) {
-                    // The view renders controlled errors.
-                  }
-                },
-                child: ListView(
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  padding: const EdgeInsets.all(16),
-                  children: [
-                    ClinicalAsyncView(
-                      value: ref.watch(detail),
-                      onRetry: () => ref.invalidate(detail),
-                      missingMessage: fr
-                          ? 'Conversation indisponible.'
-                          : 'Conversation unavailable.',
-                      builder: (data) => data == null
-                          ? const SizedBox.shrink()
-                          : Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                if (data.subject?.isNotEmpty == true)
-                                  Text(
-                                    data.subject!,
-                                    style: Theme.of(
-                                      context,
-                                    ).textTheme.titleLarge,
-                                  ),
-                                Text(
-                                  data.participants
-                                      .map(
-                                        (p) =>
-                                            p.displayName?.trim().isNotEmpty ==
-                                                true
-                                            ? p.displayName!
-                                            : (fr
-                                                  ? 'Participant'
-                                                  : 'Participant'),
-                                      )
-                                      .join(' • '),
-                                ),
-                                const SizedBox(height: 12),
-                              ],
-                            ),
-                    ),
-                    ClinicalAsyncView(
-                      value: messages,
-                      onRetry: () => ref.invalidate(provider),
-                      missingMessage: fr
-                          ? 'Messages indisponibles.'
-                          : 'Messages unavailable.',
-                      builder: (data) {
-                        if (data == null) {
-                          return const SizedBox.shrink();
-                        }
-                        return Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            if (data.content.isEmpty)
-                              Text(fr ? 'Aucun message.' : 'No messages.'),
-                            for (final message in data.content.reversed)
-                              _MessageCard(
-                                message: message,
-                                own:
-                                    message.senderPersonId ==
-                                    session.profile?.id,
-                              ),
-                            ClinicalPagination(
-                              number: data.page,
-                              totalPages: data.totalPages,
-                              last: data.last,
-                              onPrevious: () => setState(() => _page--),
-                              onNext: () => setState(() => _page++),
-                            ),
-                          ],
-                        );
-                      },
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            if (_sendError != null)
-              Text(
-                localizedErrorMessage(_sendError!.kind, french: fr),
-                textAlign: TextAlign.center,
-              ),
-            if (_sendError != null &&
-                {
-                  AppErrorKind.network,
-                  AppErrorKind.timeout,
-                  AppErrorKind.unknown,
-                }.contains(_sendError!.kind))
-              Text(
-                fr
-                    ? 'Actualisez l’historique avant de renvoyer.'
-                    : 'Refresh the history before sending again.',
-                textAlign: TextAlign.center,
-              ),
-            if (_attachments.isNotEmpty)
-              Wrap(
+        child: LayoutBuilder(
+          builder: (context, constraints) => Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 1000),
+              child: Column(
                 children: [
-                  for (final attachment in _attachments)
-                    InputChip(
-                      label: Text(attachment.fileName),
-                      onDeleted: _sending || _uploading
-                          ? null
-                          : () =>
-                                setState(() => _attachments.remove(attachment)),
-                    ),
-                ],
-              ),
-            Padding(
-              padding: const EdgeInsets.all(12),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  IconButton(
-                    tooltip: fr ? 'Joindre un fichier' : 'Attach a file',
-                    onPressed:
-                        _sending ||
-                            _uploading ||
-                            !session.isAuthenticated ||
-                            _attachments.length >= 10
-                        ? null
-                        : _attach,
-                    icon: _uploading
-                        ? const SizedBox(
-                            width: 24,
-                            height: 24,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Icon(Icons.attach_file),
+                  MessagingConnectionBanner(
+                    status: connection.status,
+                    onRetry: () => ref
+                        .read(messagingConnectionProvider(widget.id).notifier)
+                        .reconnect(),
                   ),
                   Expanded(
-                    child: TextField(
-                      controller: _text,
-                      enabled:
-                          !_sending && !_uploading && session.isAuthenticated,
-                      minLines: 1,
-                      maxLines: 4,
-                      maxLength: 10000,
-                      decoration: InputDecoration(
-                        labelText: fr ? 'Votre message' : 'Your message',
-                        border: const OutlineInputBorder(),
+                    child: RefreshIndicator(
+                      onRefresh: () async {
+                        ref.invalidate(detail);
+                        ref.invalidate(provider);
+                        try {
+                          await ref.read(provider.future);
+                        } catch (_) {
+                          // The view renders controlled errors.
+                        }
+                      },
+                      child: ListView(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        padding: const EdgeInsets.all(16),
+                        children: [
+                          ClinicalAsyncView(
+                            value: ref.watch(detail),
+                            onRetry: () => ref.invalidate(detail),
+                            missingMessage: fr
+                                ? 'Conversation indisponible.'
+                                : 'Conversation unavailable.',
+                            builder: (data) => data == null
+                                ? const SizedBox.shrink()
+                                : Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      if (data.subject?.isNotEmpty == true)
+                                        Text(
+                                          data.subject!,
+                                          style: Theme.of(
+                                            context,
+                                          ).textTheme.titleLarge,
+                                        ),
+                                      Text(
+                                        data.participants
+                                            .map(
+                                              (p) =>
+                                                  p.displayName
+                                                          ?.trim()
+                                                          .isNotEmpty ==
+                                                      true
+                                                  ? p.displayName!
+                                                  : (fr
+                                                        ? 'Participant'
+                                                        : 'Participant'),
+                                            )
+                                            .join(' • '),
+                                      ),
+                                      const SizedBox(height: 12),
+                                    ],
+                                  ),
+                          ),
+                          ClinicalAsyncView(
+                            value: messages,
+                            onRetry: () => ref.invalidate(provider),
+                            missingMessage: fr
+                                ? 'Messages indisponibles.'
+                                : 'Messages unavailable.',
+                            builder: (data) {
+                              if (data == null) {
+                                return const SizedBox.shrink();
+                              }
+                              return Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  if (data.content.isEmpty)
+                                    Text(
+                                      fr ? 'Aucun message.' : 'No messages.',
+                                    ),
+                                  for (final message in data.content.reversed)
+                                    _MessageCard(
+                                      message: message,
+                                      own:
+                                          message.senderPersonId ==
+                                          session.profile?.id,
+                                    ),
+                                  ClinicalPagination(
+                                    number: data.page,
+                                    totalPages: data.totalPages,
+                                    last: data.last,
+                                    onPrevious: () => setState(() => _page--),
+                                    onNext: () => setState(() => _page++),
+                                  ),
+                                ],
+                              );
+                            },
+                          ),
+                        ],
                       ),
                     ),
                   ),
-                  IconButton(
-                    tooltip: fr ? 'Envoyer' : 'Send',
-                    onPressed:
-                        _sending || _uploading || !session.isAuthenticated
-                        ? null
-                        : _send,
-                    icon: _sending
-                        ? const SizedBox(
-                            width: 24,
-                            height: 24,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Icon(Icons.send_outlined),
+                  ConstrainedBox(
+                    constraints: BoxConstraints(
+                      maxHeight: constraints.maxHeight * .55,
+                    ),
+                    child: SingleChildScrollView(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (_sendError != null)
+                            Text(
+                              localizedErrorMessage(
+                                _sendError!.kind,
+                                french: fr,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          if (_sendError != null &&
+                              {
+                                AppErrorKind.network,
+                                AppErrorKind.timeout,
+                                AppErrorKind.unknown,
+                              }.contains(_sendError!.kind))
+                            Text(
+                              fr
+                                  ? 'Actualisez l’historique avant de renvoyer.'
+                                  : 'Refresh the history before sending again.',
+                              textAlign: TextAlign.center,
+                            ),
+                          if (_attachments.isNotEmpty)
+                            Wrap(
+                              children: [
+                                for (final attachment in _attachments)
+                                  ConstrainedBox(
+                                    constraints: BoxConstraints(
+                                      maxWidth:
+                                          (constraints.maxWidth.clamp(
+                                                    24,
+                                                    1000,
+                                                  ) -
+                                                  24)
+                                              .toDouble(),
+                                    ),
+                                    child: InputChip(
+                                      label: Text(
+                                        attachment.fileName,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                      onDeleted: _sending || _uploading
+                                          ? null
+                                          : () => setState(
+                                              () => _attachments.remove(
+                                                attachment,
+                                              ),
+                                            ),
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          Padding(
+                            padding: const EdgeInsets.all(12),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                IconButton(
+                                  tooltip: fr
+                                      ? 'Joindre un fichier'
+                                      : 'Attach a file',
+                                  onPressed:
+                                      _sending ||
+                                          _uploading ||
+                                          !session.isAuthenticated ||
+                                          _attachments.length >= 10
+                                      ? null
+                                      : _attach,
+                                  icon: _uploading
+                                      ? const SizedBox(
+                                          width: 24,
+                                          height: 24,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                          ),
+                                        )
+                                      : const Icon(Icons.attach_file),
+                                ),
+                                Expanded(
+                                  child: TextField(
+                                    controller: _text,
+                                    enabled:
+                                        !_sending &&
+                                        !_uploading &&
+                                        session.isAuthenticated,
+                                    minLines: 1,
+                                    maxLines: 4,
+                                    maxLength: 10000,
+                                    decoration: InputDecoration(
+                                      labelText: fr
+                                          ? 'Votre message'
+                                          : 'Your message',
+                                      border: const OutlineInputBorder(),
+                                    ),
+                                  ),
+                                ),
+                                IconButton(
+                                  tooltip: fr ? 'Envoyer' : 'Send',
+                                  onPressed:
+                                      _sending ||
+                                          _uploading ||
+                                          !session.isAuthenticated
+                                      ? null
+                                      : _send,
+                                  icon: _sending
+                                      ? const SizedBox(
+                                          width: 24,
+                                          height: 24,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                          ),
+                                        )
+                                      : const Icon(Icons.send_outlined),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 ],
               ),
             ),
-          ],
+          ),
         ),
       ),
     );
@@ -414,44 +471,47 @@ class _MessageCard extends StatelessWidget {
     final fr = clinicalFrench(context);
     return Align(
       alignment: own ? Alignment.centerRight : Alignment.centerLeft,
-      child: Card(
-        color: own ? Theme.of(context).colorScheme.primaryContainer : null,
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                own
-                    ? (fr ? 'Vous' : 'You')
-                    : (message.senderName ??
-                          (fr ? 'Participant' : 'Participant')),
-                style: Theme.of(context).textTheme.labelMedium,
-              ),
-              if (message.deletedAt != null)
-                Text(fr ? 'Message supprimé' : 'Deleted message')
-              else ...[
-                if (message.content?.isNotEmpty == true)
-                  SelectableText(message.content!),
-                for (final documentId in message.documentIds)
-                  _AttachmentButton(
-                    conversationId: message.conversationId,
-                    documentId: documentId,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 720),
+        child: Card(
+          color: own ? Theme.of(context).colorScheme.primaryContainer : null,
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  own
+                      ? (fr ? 'Vous' : 'You')
+                      : (message.senderName ??
+                            (fr ? 'Participant' : 'Participant')),
+                  style: Theme.of(context).textTheme.labelMedium,
+                ),
+                if (message.deletedAt != null)
+                  Text(fr ? 'Message supprimé' : 'Deleted message')
+                else ...[
+                  if (message.content?.isNotEmpty == true)
+                    SelectableText(message.content!),
+                  for (final documentId in message.documentIds)
+                    _AttachmentButton(
+                      conversationId: message.conversationId,
+                      documentId: documentId,
+                    ),
+                ],
+                const SizedBox(height: 4),
+                Text(
+                  clinicalDateTime(context, message.sentAt),
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+                if (own && message.deletedAt == null)
+                  Text(
+                    message.readByOthersCount > 0
+                        ? (fr ? 'Lu' : 'Read')
+                        : (fr ? 'Envoyé' : 'Sent'),
+                    style: Theme.of(context).textTheme.labelSmall,
                   ),
               ],
-              const SizedBox(height: 4),
-              Text(
-                clinicalDateTime(context, message.sentAt),
-                style: Theme.of(context).textTheme.bodySmall,
-              ),
-              if (own && message.deletedAt == null)
-                Text(
-                  message.readByOthersCount > 0
-                      ? (fr ? 'Lu' : 'Read')
-                      : (fr ? 'Envoyé' : 'Sent'),
-                  style: Theme.of(context).textTheme.labelSmall,
-                ),
-            ],
+            ),
           ),
         ),
       ),

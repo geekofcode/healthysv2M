@@ -1,6 +1,6 @@
+import '../../../app/layout/adaptive_navigation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import '../../consultations/presentation/clinical_async_view.dart';
 import '../application/lab_result_providers.dart';
 import '../domain/lab_result.dart';
@@ -66,6 +66,11 @@ class _LabResultsPageState extends ConsumerState<LabResultsPage> {
                       for (final result in data.content)
                         Card(
                           child: ListTile(
+                            selected: AdaptiveNavigation.isSelected(
+                              context,
+                              result.id,
+                              routePrefix: '/lab-results',
+                            ),
                             leading: const Icon(Icons.science_outlined),
                             title: Text(result.resultNumber),
                             subtitle: Text(
@@ -79,7 +84,8 @@ class _LabResultsPageState extends ConsumerState<LabResultsPage> {
                               ].join('\n'),
                             ),
                             trailing: const Icon(Icons.chevron_right),
-                            onTap: () => context.pushNamed(
+                            onTap: () => AdaptiveNavigation.openDetail(
+                              context,
                               'lab-result-detail',
                               pathParameters: {'id': result.id},
                             ),

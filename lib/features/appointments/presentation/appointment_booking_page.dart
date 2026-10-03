@@ -163,6 +163,8 @@ class _BookingFormState extends ConsumerState<_BookingForm> {
       children: [
         if (original == null && options != null) ...[
           DropdownButtonFormField<String>(
+            isExpanded: true,
+            itemHeight: null,
             key: ValueKey('organization-$_organizationId'),
             initialValue: _organizationId,
             decoration: InputDecoration(
@@ -172,7 +174,7 @@ class _BookingFormState extends ConsumerState<_BookingForm> {
               for (final organization in options.organizations)
                 DropdownMenuItem(
                   value: organization.id,
-                  child: Text(organization.name),
+                  child: Text(organization.name, softWrap: true),
                 ),
             ],
             onChanged: _busy
@@ -187,6 +189,8 @@ class _BookingFormState extends ConsumerState<_BookingForm> {
           ),
           const SizedBox(height: 16),
           DropdownButtonFormField<String>(
+            isExpanded: true,
+            itemHeight: null,
             key: ValueKey('professional-$_organizationId-$_professionalId'),
             initialValue: _professionalId,
             decoration: InputDecoration(
@@ -196,7 +200,7 @@ class _BookingFormState extends ConsumerState<_BookingForm> {
               for (final professional in professionals)
                 DropdownMenuItem(
                   value: professional.id,
-                  child: Text(professional.name),
+                  child: Text(professional.name, softWrap: true),
                 ),
             ],
             onChanged: _busy || professionals.isEmpty
