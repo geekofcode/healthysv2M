@@ -68,7 +68,7 @@ class _LabResultsPageState extends ConsumerState<LabResultsPage> {
                           child: ListTile(
                             selected: AdaptiveNavigation.isSelected(
                               context,
-                              item.id,
+                              result.id,
                               routePrefix: '/lab-results',
                             ),
                             leading: const Icon(Icons.science_outlined),

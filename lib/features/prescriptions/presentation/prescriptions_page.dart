@@ -62,7 +62,7 @@ class _PrescriptionsPageState extends ConsumerState<PrescriptionsPage> {
                           child: ListTile(
                             selected: AdaptiveNavigation.isSelected(
                               context,
-                              item.id,
+                              prescription.id,
                               routePrefix: '/prescriptions',
                             ),
                             leading: const Icon(Icons.medication_outlined),

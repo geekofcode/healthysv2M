@@ -7,7 +7,6 @@ import 'package:healthysv2/features/messaging/data/messaging_repository.dart';
 import 'package:healthysv2/features/messaging/presentation/conversation_page.dart';
 import 'package:healthysv2/features/messaging/presentation/messaging_connection_banner.dart';
 import 'package:healthysv2/features/teleconsultations/application/teleconsultation_providers.dart';
-import 'package:healthysv2/features/teleconsultations/data/teleconsultation_media.dart';
 
 import 'messaging_pages_test.dart' as messaging;
 import 'teleconsultation_pages_test.dart' as video;
