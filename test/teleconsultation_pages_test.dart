@@ -191,7 +191,7 @@ void main() {
       ),
     );
     await pumpRoom(tester, call);
-    await tester.ensureVisible(find.text('Leave call'));
+    await tester.scrollUntilVisible(find.text('Leave call'), 300);
     await tester.tap(find.text('Leave call'));
     await tester.pumpAndSettle();
     expect(call.left, 0);
