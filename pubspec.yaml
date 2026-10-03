@@ -13,6 +13,8 @@ dependencies:
     sdk: flutter
   healthys_api:
     path: packages/healthys_api
+  firebase_core: ^4.15.0
+  firebase_messaging: ^16.7.0
   dio: ^5.9.0
   flutter_riverpod: ^3.0.0
   flutter_secure_storage: ^10.0.0
