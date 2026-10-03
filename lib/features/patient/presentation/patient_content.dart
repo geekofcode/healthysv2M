@@ -132,3 +132,27 @@ class PatientField extends StatelessWidget {
     ),
   );
 }
+
+/// Uses local constraints so embedded detail panes remain readable as well.
+/// Text scaling increases the minimum column width instead of clipping labels.
+class PatientSectionsLayout extends StatelessWidget {
+  const PatientSectionsLayout({super.key, required this.children});
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) => LayoutBuilder(
+    builder: (context, constraints) {
+      final scale = MediaQuery.textScalerOf(context).scale(16) / 16;
+      final minimumWidth = 340 * scale;
+      final columns = constraints.maxWidth >= minimumWidth * 2 + 16 ? 2 : 1;
+      final width = (constraints.maxWidth - (columns - 1) * 16) / columns;
+      return Wrap(
+        spacing: 16,
+        runSpacing: 12,
+        children: [
+          for (final child in children) SizedBox(width: width, child: child),
+        ],
+      );
+    },
+  );
+}

@@ -24,22 +24,41 @@ class MessagingConnectionBanner extends StatelessWidget {
     };
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12),
-      child: Row(
-        children: [
-          Icon(
-            status == MessagingConnectionStatus.connected
-                ? Icons.wifi
-                : Icons.wifi_off,
-            size: 18,
-          ),
-          const SizedBox(width: 8),
-          Expanded(child: Text(label)),
-          if (status == MessagingConnectionStatus.disconnected)
-            TextButton(
-              onPressed: onRetry,
-              child: Text(fr ? 'Reconnecter' : 'Reconnect'),
-            ),
-        ],
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final retry = status == MessagingConnectionStatus.disconnected;
+          final stacked =
+              constraints.maxWidth < 420 ||
+              MediaQuery.textScalerOf(context).scale(14) > 21;
+          final description = Row(
+            children: [
+              Icon(
+                status == MessagingConnectionStatus.connected
+                    ? Icons.wifi
+                    : Icons.wifi_off,
+                size: 18,
+              ),
+              const SizedBox(width: 8),
+              Expanded(child: Text(label)),
+            ],
+          );
+          final action = TextButton(
+            onPressed: onRetry,
+            child: Text(fr ? 'Reconnecter' : 'Reconnect'),
+          );
+          if (stacked) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [description, if (retry) action],
+            );
+          }
+          return Row(
+            children: [
+              Expanded(child: description),
+              if (retry) action,
+            ],
+          );
+        },
       ),
     );
   }

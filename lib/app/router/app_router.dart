@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../layout/adaptive_patient_shell.dart';
 
 import '../../features/auth/application/session_controller.dart';
 import '../../features/auth/domain/session.dart';
@@ -55,156 +56,186 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     },
     routes: [
       GoRoute(
-        path: '/teleconsultations',
-        name: 'teleconsultations',
-        builder: (_, _) => const TeleconsultationsPage(),
-      ),
-      GoRoute(
-        path: '/teleconsultations/:id',
-        name: 'teleconsultation-room',
-        builder: (_, state) =>
-            TeleconsultationRoomPage(id: state.pathParameters['id']!),
-      ),
-      GoRoute(
-        path: '/notifications',
-        name: 'notifications',
-        builder: (_, _) => const NotificationsPage(),
-      ),
-      GoRoute(
-        path: '/notification-preferences',
-        name: 'notification-preferences',
-        builder: (_, _) => const NotificationPreferencesPage(),
-      ),
-      GoRoute(
-        path: '/notifications/:id',
-        name: 'notification-detail',
-        builder: (_, state) =>
-            NotificationDetailPage(id: state.pathParameters['id']!),
-      ),
-      GoRoute(
         path: '/login',
         name: 'login',
         builder: (_, _) => const AuthPage(),
       ),
-      GoRoute(
-        path: '/profile',
-        name: 'profile',
-        builder: (_, _) => const ProfilePage(),
-      ),
-      GoRoute(path: '/', name: 'home', builder: (_, _) => const HomePage()),
-      GoRoute(
-        path: '/medical-record',
-        name: 'medical-record',
-        builder: (_, _) => const MedicalRecordPage(),
-      ),
-      GoRoute(
-        path: '/appointments',
-        name: 'appointments',
-        builder: (_, _) => const AppointmentsPage(),
-      ),
-      GoRoute(
-        path: '/appointments/new',
-        name: 'appointment-book',
-        builder: (_, _) => const AppointmentBookingPage(),
-      ),
-      GoRoute(
-        path: '/appointments/:id/reschedule',
-        name: 'appointment-reschedule',
-        builder: (_, state) =>
-            AppointmentBookingPage(appointmentId: state.pathParameters['id']!),
-      ),
-      GoRoute(
-        path: '/appointments/:id',
-        name: 'appointment-detail',
-        builder: (_, state) =>
-            AppointmentDetailPage(id: state.pathParameters['id']!),
-      ),
-      GoRoute(
-        path: '/consultations',
-        name: 'consultations',
-        builder: (_, _) => const ConsultationHistoryPage(),
-      ),
-      GoRoute(
-        path: '/consultations/:id/documents',
-        name: 'consultation-documents',
-        builder: (_, state) =>
-            DocumentsPage(consultationId: state.pathParameters['id']!),
-      ),
-      GoRoute(
-        path: '/consultations/:id',
-        name: 'consultation-detail',
-        builder: (_, state) =>
-            ConsultationDetailPage(id: state.pathParameters['id']!),
-      ),
-      GoRoute(
-        path: '/documents',
-        name: 'documents',
-        builder: (_, _) => const DocumentsPage(),
-      ),
-      GoRoute(
-        path: '/documents/:id/view',
-        name: 'document-preview',
-        builder: (_, state) =>
-            DocumentPreviewPage(id: state.pathParameters['id']!),
-      ),
-      GoRoute(
-        path: '/lab-results',
-        name: 'lab-results',
-        builder: (_, _) => const LabResultsPage(),
-      ),
-      GoRoute(
-        path: '/lab-results/:id',
-        name: 'lab-result-detail',
-        builder: (_, state) =>
-            LabResultDetailPage(id: state.pathParameters['id']!),
-      ),
-      GoRoute(
-        path: '/prescriptions',
-        name: 'prescriptions',
-        builder: (_, _) => const PrescriptionsPage(),
-      ),
-      GoRoute(
-        path: '/prescriptions/:id',
-        name: 'prescription-detail',
-        builder: (_, state) =>
-            PrescriptionDetailPage(id: state.pathParameters['id']!),
-      ),
-      GoRoute(
-        path: '/maternal-child',
-        name: 'maternal-child',
-        builder: (_, _) => const MaternalChildPage(),
-      ),
-      GoRoute(
-        path: '/maternal-child/pregnancies/:id',
-        name: 'pregnancy-detail',
-        builder: (_, state) =>
-            PregnancyDetailPage(id: state.pathParameters['id']!),
-      ),
-      GoRoute(
-        path: '/maternal-child/children/:id',
-        name: 'child-detail',
-        builder: (_, state) => ChildDetailPage(id: state.pathParameters['id']!),
-      ),
-      GoRoute(
-        path: '/messages',
-        name: 'conversations',
-        builder: (_, _) => const ConversationsPage(),
-      ),
-      GoRoute(
-        path: '/messages/new',
-        name: 'conversation-new',
-        builder: (_, _) => const NewConversationPage(),
-      ),
-      GoRoute(
-        path: '/messages/:id',
-        name: 'conversation',
-        builder: (_, state) =>
-            ConversationPage(id: state.pathParameters['id']!),
-      ),
-      GoRoute(
-        path: '/settings',
-        name: 'settings',
-        builder: (_, _) => const SettingsPage(),
+      ShellRoute(
+        builder: (context, state, child) => AdaptivePatientShell(
+          path: state.uri.path,
+          master: _masterFor(state),
+          child: child,
+        ),
+        routes: [
+          GoRoute(
+            path: '/teleconsultations',
+            name: 'teleconsultations',
+            builder: (_, _) => const TeleconsultationsPage(),
+          ),
+          GoRoute(
+            path: '/teleconsultations/:id',
+            name: 'teleconsultation-room',
+            builder: (_, state) => TeleconsultationRoomPage(
+              key: ValueKey(state.uri.path),
+              id: state.pathParameters['id']!,
+            ),
+          ),
+          GoRoute(
+            path: '/notifications',
+            name: 'notifications',
+            builder: (_, _) => const SizedBox.shrink(),
+          ),
+          GoRoute(
+            path: '/notification-preferences',
+            name: 'notification-preferences',
+            builder: (_, _) => const NotificationPreferencesPage(),
+          ),
+          GoRoute(
+            path: '/notifications/:id',
+            name: 'notification-detail',
+            builder: (_, state) => NotificationDetailPage(
+              key: ValueKey(state.uri.path),
+              id: state.pathParameters['id']!,
+            ),
+          ),
+          GoRoute(
+            path: '/profile',
+            name: 'profile',
+            builder: (_, _) => const ProfilePage(),
+          ),
+          GoRoute(path: '/', name: 'home', builder: (_, _) => const HomePage()),
+          GoRoute(
+            path: '/medical-record',
+            name: 'medical-record',
+            builder: (_, _) => const MedicalRecordPage(),
+          ),
+          GoRoute(
+            path: '/appointments',
+            name: 'appointments',
+            builder: (_, _) => const SizedBox.shrink(),
+          ),
+          GoRoute(
+            path: '/appointments/new',
+            name: 'appointment-book',
+            builder: (_, _) => const AppointmentBookingPage(),
+          ),
+          GoRoute(
+            path: '/appointments/:id/reschedule',
+            name: 'appointment-reschedule',
+            builder: (_, state) => AppointmentBookingPage(
+              appointmentId: state.pathParameters['id']!,
+            ),
+          ),
+          GoRoute(
+            path: '/appointments/:id',
+            name: 'appointment-detail',
+            builder: (_, state) => AppointmentDetailPage(
+              key: ValueKey(state.uri.path),
+              id: state.pathParameters['id']!,
+            ),
+          ),
+          GoRoute(
+            path: '/consultations',
+            name: 'consultations',
+            builder: (_, _) => const SizedBox.shrink(),
+          ),
+          GoRoute(
+            path: '/consultations/:id/documents',
+            name: 'consultation-documents',
+            builder: (_, state) => const SizedBox.shrink(),
+          ),
+          GoRoute(
+            path: '/consultations/:id',
+            name: 'consultation-detail',
+            builder: (_, state) => ConsultationDetailPage(
+              key: ValueKey(state.uri.path),
+              id: state.pathParameters['id']!,
+            ),
+          ),
+          GoRoute(
+            path: '/documents',
+            name: 'documents',
+            builder: (_, _) => const SizedBox.shrink(),
+          ),
+          GoRoute(
+            path: '/documents/:id/view',
+            name: 'document-preview',
+            builder: (_, state) => DocumentPreviewPage(
+              key: ValueKey(state.uri.path),
+              id: state.pathParameters['id']!,
+            ),
+          ),
+          GoRoute(
+            path: '/lab-results',
+            name: 'lab-results',
+            builder: (_, _) => const SizedBox.shrink(),
+          ),
+          GoRoute(
+            path: '/lab-results/:id',
+            name: 'lab-result-detail',
+            builder: (_, state) => LabResultDetailPage(
+              key: ValueKey(state.uri.path),
+              id: state.pathParameters['id']!,
+            ),
+          ),
+          GoRoute(
+            path: '/prescriptions',
+            name: 'prescriptions',
+            builder: (_, _) => const SizedBox.shrink(),
+          ),
+          GoRoute(
+            path: '/prescriptions/:id',
+            name: 'prescription-detail',
+            builder: (_, state) => PrescriptionDetailPage(
+              key: ValueKey(state.uri.path),
+              id: state.pathParameters['id']!,
+            ),
+          ),
+          GoRoute(
+            path: '/maternal-child',
+            name: 'maternal-child',
+            builder: (_, _) => const SizedBox.shrink(),
+          ),
+          GoRoute(
+            path: '/maternal-child/pregnancies/:id',
+            name: 'pregnancy-detail',
+            builder: (_, state) => PregnancyDetailPage(
+              key: ValueKey(state.uri.path),
+              id: state.pathParameters['id']!,
+            ),
+          ),
+          GoRoute(
+            path: '/maternal-child/children/:id',
+            name: 'child-detail',
+            builder: (_, state) => ChildDetailPage(
+              key: ValueKey(state.uri.path),
+              id: state.pathParameters['id']!,
+            ),
+          ),
+          GoRoute(
+            path: '/messages',
+            name: 'conversations',
+            builder: (_, _) => const SizedBox.shrink(),
+          ),
+          GoRoute(
+            path: '/messages/new',
+            name: 'conversation-new',
+            builder: (_, _) => const NewConversationPage(),
+          ),
+          GoRoute(
+            path: '/messages/:id',
+            name: 'conversation',
+            builder: (_, state) => ConversationPage(
+              key: ValueKey(state.uri.path),
+              id: state.pathParameters['id']!,
+            ),
+          ),
+          GoRoute(
+            path: '/settings',
+            name: 'settings',
+            builder: (_, _) => const SettingsPage(),
+          ),
+        ],
       ),
     ],
     errorBuilder: (context, state) => Scaffold(
@@ -290,4 +321,87 @@ bool _knownReturnPath(String path) {
 
 class _SessionRouterRefresh extends ChangeNotifier {
   void notify() => notifyListeners();
+}
+
+AdaptiveMaster? _masterFor(GoRouterState state) {
+  final path = state.uri.path;
+  final selectedId = state.pathParameters['id'];
+  if (path == '/appointments/new' ||
+      path.endsWith('/reschedule') ||
+      path == '/messages/new') {
+    return null;
+  }
+  if (path.startsWith('/appointments')) {
+    return AdaptiveMaster(
+      path: '/appointments',
+      child: const AppointmentsPage(),
+      selectedId: selectedId,
+    );
+  }
+  if (path.startsWith('/consultations')) {
+    if (path.endsWith('/documents')) {
+      return AdaptiveMaster(
+        path: path,
+        child: DocumentsPage(consultationId: selectedId),
+      );
+    }
+    return AdaptiveMaster(
+      path: '/consultations',
+      child: const ConsultationHistoryPage(),
+      selectedId: selectedId,
+    );
+  }
+  if (path.startsWith('/documents')) {
+    final raw = state.uri.queryParameters['consultation'];
+    final consultationId =
+        raw != null &&
+            RegExp(
+              r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$',
+            ).hasMatch(raw)
+        ? raw
+        : null;
+    return AdaptiveMaster(
+      path: consultationId == null
+          ? '/documents'
+          : '/consultations/$consultationId/documents',
+      child: DocumentsPage(consultationId: consultationId),
+      selectedId: selectedId,
+    );
+  }
+  if (path.startsWith('/lab-results')) {
+    return AdaptiveMaster(
+      path: '/lab-results',
+      child: const LabResultsPage(),
+      selectedId: selectedId,
+    );
+  }
+  if (path.startsWith('/prescriptions')) {
+    return AdaptiveMaster(
+      path: '/prescriptions',
+      child: const PrescriptionsPage(),
+      selectedId: selectedId,
+    );
+  }
+  if (path.startsWith('/maternal-child')) {
+    return AdaptiveMaster(
+      path: '/maternal-child',
+      child: const MaternalChildPage(),
+      selectedId: selectedId,
+    );
+  }
+  if (path.startsWith('/messages')) {
+    return AdaptiveMaster(
+      path: '/messages',
+      child: const ConversationsPage(),
+      selectedId: selectedId,
+    );
+  }
+  if (path.startsWith('/notifications')) {
+    return AdaptiveMaster(
+      path: '/notifications',
+      child: const NotificationsPage(),
+      selectedId: selectedId,
+    );
+  }
+  return null;
 }

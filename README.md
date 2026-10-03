@@ -6,6 +6,10 @@ Application Flutter Android/iOS. Architecture par fonctionnalité, Riverpod pour
 
 Le [guide Android/iOS et stores](docs/mobile-release/README.md) détaille la signature, les identifiants, la prévalidation, la recette réseau/offline, la sécurité des tokens, les mesures de performance et les configurations Play Console/App Store Connect. La CI compile Android debug/release et iOS release sans signature ; elle ne distribue aucun build aux stores. Les credentials fournisseurs et essais sur appareils doivent être finalisés avant distribution.
 
+## Mobile, tablette et master-detail
+
+La [navigation adaptative](docs/responsive/README.md) utilise la largeur disponible et la taille du texte : écrans successifs sur mobile, liste et détail côte à côte avec navigation latérale lorsque l'espace suffit. Les cartes, formulaires, paginations, messages et vidéos s'adaptent aux contraintes du terminal et du clavier. Les appels gardent un espace dédié ; l'accès patient et les règles de session restent protégés.
+
 ## Démarrer
 
 Installer la version Flutter stable épinglée dans `.github/workflows/flutter.yml` (Dart >= 3.12.2), puis :

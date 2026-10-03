@@ -1,3 +1,4 @@
+import '../../../app/layout/adaptive_navigation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -88,6 +89,11 @@ class _AppointmentsPageState extends ConsumerState<AppointmentsPage> {
                       for (final appointment in data.content)
                         Card(
                           child: ListTile(
+                            selected: AdaptiveNavigation.isSelected(
+                              context,
+                              appointment.id,
+                              routePrefix: '/appointments',
+                            ),
                             leading: const Icon(Icons.event_outlined),
                             title: Text(
                               appointmentDateTime(
@@ -112,15 +118,19 @@ class _AppointmentsPageState extends ConsumerState<AppointmentsPage> {
                               ].join('\n'),
                             ),
                             trailing: const Icon(Icons.chevron_right),
-                            onTap: () => context.pushNamed(
+                            onTap: () => AdaptiveNavigation.openDetail(
+                              context,
                               'appointment-detail',
                               pathParameters: {'id': appointment.id},
                             ),
                           ),
                         ),
                       if (data.totalPages > 1)
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        Wrap(
+                          alignment: WrapAlignment.spaceBetween,
+                          crossAxisAlignment: WrapCrossAlignment.center,
+                          spacing: 12,
+                          runSpacing: 8,
                           children: [
                             TextButton(
                               onPressed: _page > 0

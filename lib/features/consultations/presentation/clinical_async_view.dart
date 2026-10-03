@@ -75,8 +75,11 @@ class ClinicalPagination extends StatelessWidget {
   Widget build(BuildContext context) {
     final fr = clinicalFrench(context);
     if (totalPages <= 1) return const SizedBox.shrink();
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return Wrap(
+      alignment: WrapAlignment.spaceBetween,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      spacing: 8,
+      runSpacing: 8,
       children: [
         TextButton(
           onPressed: number > 0 ? onPrevious : null,

@@ -66,10 +66,14 @@ class HomePage extends ConsumerWidget {
                 builder: (context, dashboard) => Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    PatientIdentitySection(dashboard: dashboard),
-                    PatientContactsSection(dashboard: dashboard),
-                    PatientInsuranceSection(dashboard: dashboard),
-                    PatientAlertsSection(dashboard: dashboard),
+                    PatientSectionsLayout(
+                      children: [
+                        PatientIdentitySection(dashboard: dashboard),
+                        PatientContactsSection(dashboard: dashboard),
+                        PatientInsuranceSection(dashboard: dashboard),
+                        PatientAlertsSection(dashboard: dashboard),
+                      ],
+                    ),
                     const SizedBox(height: 12),
                     OutlinedButton.icon(
                       onPressed: () => context.pushNamed('appointments'),
