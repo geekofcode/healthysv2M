@@ -35,4 +35,36 @@ void main() {
     expect(await dev.readAccessToken(), isNull);
     expect(await prod.readAccessToken(), 'access');
   });
+  for (final corrupt in [
+    '{invalid-json',
+    '[]',
+    '{"accessToken":42,"expiresAt":"2026-10-02T16:00:00Z"}',
+    '{"accessToken":"","expiresAt":"2026-10-02T16:00:00Z"}',
+    '{"accessToken":"secret","expiresAt":"2026-10-02T16:00:00"}',
+    '{"accessToken":"secret","expiresAt":"invalid"}',
+    '{"accessToken":"secret","expiresAt":"2026-10-02T16:00:00Z","refreshToken":42}',
+  ]) {
+    test(
+      'corrupt secure bundle is cleared without legacy fallback: $corrupt',
+      () async {
+        final dev = SecureTokenStore(storage, namespace: 'dev');
+        final prod = SecureTokenStore(storage, namespace: 'prod');
+        await storage.write(key: 'healthys.dev.session.v1', value: corrupt);
+        await dev.writeAccessToken('legacy-secret');
+        await prod.writeSession(tokens);
+        expect(await dev.readAccessToken(), isNull);
+        expect(await storage.read(key: 'healthys.dev.session.v1'), isNull);
+        expect(await storage.read(key: 'healthys.dev.access_token'), isNull);
+        expect(await prod.readAccessToken(), 'access');
+      },
+    );
+  }
+
+  test('session diagnostics redact all credentials', () {
+    final diagnostic = tokens.toString();
+    expect(diagnostic, contains('redacted'));
+    expect(diagnostic, isNot(contains('refresh')));
+    expect(diagnostic, isNot(contains('identity')));
+    expect(diagnostic, isNot(contains('access')));
+  });
 }

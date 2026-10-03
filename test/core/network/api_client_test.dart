@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
@@ -30,6 +31,8 @@ class RecordingAdapter implements HttpClientAdapter {
   final requests = <RequestOptions>[];
   int status = 200;
   List<int> statuses = [];
+  Completer<void>? pending;
+  DioExceptionType? failureType;
   @override
   Future<ResponseBody> fetch(
     RequestOptions options,
@@ -37,6 +40,14 @@ class RecordingAdapter implements HttpClientAdapter {
     Future<void>? cancelFuture,
   ) async {
     requests.add(options);
+    await pending?.future;
+    if (failureType != null) {
+      throw DioException(
+        requestOptions: options,
+        type: failureType!,
+        error: 'private diagnostic with token',
+      );
+    }
     return ResponseBody.fromString(
       '{"message":"Session expirée","code":"AUTH_EXPIRED"}',
       statuses.isEmpty ? status : statuses.removeAt(0),
@@ -281,4 +292,106 @@ void main() {
     await dio.get('public', options: Options(extra: {'requiresAuth': false}));
     expect(adapter.requests.length, 1);
   });
+  test('unmarked mutations refresh but are never replayed after 401', () async {
+    var refreshes = 0;
+    dio.close();
+    dio = createApiClient(
+      baseUrl: Uri.parse('https://api.healthys.test/api/v1'),
+      tokenStore: tokens,
+      accessToken: ({bool forceRefresh = false}) async {
+        if (forceRefresh) refreshes++;
+        return forceRefresh ? 'new' : 'old';
+      },
+    )..httpClientAdapter = adapter;
+    adapter.status = 401;
+    await expectLater(
+      dio.post('patients/me/actions', data: {'action': 'create'}),
+      throwsA(isA<DioException>()),
+    );
+    expect(adapter.requests, hasLength(1));
+    expect(refreshes, 1);
+  });
+
+  for (final status in [200, 401, 422, 503]) {
+    test('late $status response is discarded after account switch', () async {
+      var revision = 1;
+      var refreshes = 0;
+      var expired = 0;
+      dio.close();
+      dio = createApiClient(
+        baseUrl: Uri.parse('https://api.healthys.test/api/v1'),
+        tokenStore: tokens,
+        accessToken: ({bool forceRefresh = false}) async {
+          if (forceRefresh) refreshes++;
+          return 'old';
+        },
+        sessionRevision: () => revision,
+        expireSession: () async {
+          expired++;
+        },
+      )..httpClientAdapter = adapter;
+      adapter.status = status;
+      adapter.pending = Completer<void>();
+      final request = dio.get('patients/me');
+      final expectation = expectLater(
+        request,
+        throwsA(
+          isA<DioException>()
+              .having((e) => e.type, 'type', DioExceptionType.cancel)
+              .having((e) => e.response, 'previous account response', isNull),
+        ),
+      );
+      await Future<void>.delayed(Duration.zero);
+      expect(adapter.requests, hasLength(1));
+      revision++;
+      adapter.pending!.complete();
+      await expectation;
+      expect(refreshes, 0);
+      expect(expired, 0);
+    });
+  }
+
+  test('offline transport failure is safe and never replayed', () async {
+    adapter.failureType = DioExceptionType.connectionError;
+    try {
+      await dio.get('patients/me');
+      fail('Expected offline failure');
+    } on DioException catch (error) {
+      final safe = error.error! as AppException;
+      expect(safe.kind, AppErrorKind.network);
+      expect(safe.message, isNot(contains('private diagnostic')));
+      expect(tokens.token, 'access-token');
+      expect(adapter.requests, hasLength(1));
+    }
+  });
+  test(
+    'account switch during refresh discards the old account failure',
+    () async {
+      var revision = 1;
+      final pending = Completer<String?>();
+      dio.close();
+      dio = createApiClient(
+        baseUrl: Uri.parse('https://api.healthys.test/api/v1'),
+        tokenStore: tokens,
+        sessionRevision: () => revision,
+        accessToken: ({bool forceRefresh = false}) async =>
+            forceRefresh ? pending.future : 'old',
+      )..httpClientAdapter = adapter;
+      adapter.status = 401;
+      final request = dio.get('patients/me');
+      final expectation = expectLater(
+        request,
+        throwsA(
+          isA<DioException>()
+              .having((e) => e.type, 'type', DioExceptionType.cancel)
+              .having((e) => e.response, 'previous response', isNull),
+        ),
+      );
+      await Future<void>.delayed(Duration.zero);
+      revision++;
+      pending.complete('new-account-token');
+      await expectation;
+      expect(adapter.requests, hasLength(1));
+    },
+  );
 }

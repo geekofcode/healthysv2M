@@ -15,12 +15,34 @@ class SessionTokens {
     'refreshToken': refreshToken,
     'idToken': idToken,
   };
-  factory SessionTokens.fromJson(Map<String, dynamic> json) => SessionTokens(
-    accessToken: json['accessToken'] as String,
-    expiresAt: DateTime.parse(json['expiresAt'] as String),
-    refreshToken: json['refreshToken'] as String?,
-    idToken: json['idToken'] as String?,
-  );
+  factory SessionTokens.fromJson(Map<String, dynamic> json) {
+    final access = json['accessToken'];
+    final expiry = json['expiresAt'];
+    final refresh = json['refreshToken'];
+    final identity = json['idToken'];
+    if (access is! String ||
+        access.trim().isEmpty ||
+        expiry is! String ||
+        !RegExp(r'(Z|[+-]\d{2}:\d{2})$').hasMatch(expiry) ||
+        (refresh != null && (refresh is! String || refresh.trim().isEmpty)) ||
+        (identity != null &&
+            (identity is! String || identity.trim().isEmpty))) {
+      throw const FormatException('Invalid secure session');
+    }
+    final expiresAt = DateTime.tryParse(expiry);
+    if (expiresAt == null)
+      throw const FormatException('Invalid secure session');
+    return SessionTokens(
+      accessToken: access,
+      expiresAt: expiresAt,
+      refreshToken: refresh as String?,
+      idToken: identity as String?,
+    );
+  }
+
+  @override
+  String toString() =>
+      'SessionTokens(expiresAt: $expiresAt, credentials: redacted)';
 }
 
 enum SessionStatus {

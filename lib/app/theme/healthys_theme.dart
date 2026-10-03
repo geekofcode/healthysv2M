@@ -10,7 +10,9 @@ abstract final class HealthysTheme {
   static ThemeData _build(Brightness brightness) {
     final colors = ColorScheme.fromSeed(
       seedColor: primary,
-      secondary: secondary,
+      secondary: brightness == Brightness.light
+          ? secondary
+          : const Color(0xFF82DDBB),
       brightness: brightness,
     );
     return ThemeData(

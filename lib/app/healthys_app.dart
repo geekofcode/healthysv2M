@@ -4,6 +4,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'router/app_router.dart';
+import '../core/preferences/app_preferences.dart';
 import 'theme/healthys_theme.dart';
 import '../features/notifications/application/push_controller.dart';
 import '../features/notifications/application/notification_providers.dart';
@@ -83,11 +84,21 @@ class _HealthysAppState extends ConsumerState<HealthysApp>
         unawaited(_openPending());
       }
     });
+    final preferences = ref.watch(appPreferencesProvider);
     return MaterialApp.router(
       title: "HEALTH'YS",
       debugShowCheckedModeBanner: false,
       theme: HealthysTheme.light,
       darkTheme: HealthysTheme.dark,
+      themeMode: preferences.themeMode,
+      locale: preferences.locale,
+      localeListResolutionCallback: (locales, supportedLocales) {
+        for (final locale in locales ?? const <Locale>[]) {
+          if (locale.languageCode == 'fr') return const Locale('fr');
+          if (locale.languageCode == 'en') return const Locale('en');
+        }
+        return const Locale('en');
+      },
       supportedLocales: const [Locale('en'), Locale('fr')],
       localizationsDelegates: GlobalMaterialLocalizations.delegates,
       routerConfig: ref.watch(appRouterProvider),

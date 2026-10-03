@@ -77,4 +77,15 @@ void main() {
       expect(timeout.toString(), isNot(contains('secret-token')));
     },
   );
+  test('untrusted support metadata cannot leak diagnostics into UI', () {
+    final result = AppException.fromDio(
+      failure({
+        'code': 'Bearer private-token',
+        'correlationId': 'private-token\npatient-identity',
+      }, status: 503),
+    );
+    expect(result.code, isNull);
+    expect(result.correlationId, 'request-id');
+    expect(result.toString(), isNot(contains('private-token')));
+  });
 }

@@ -39,18 +39,25 @@ class AppException implements Exception {
       message: kind == AppErrorKind.server
           ? _defaultMessage(kind)
           : _text(data['message']) ?? _defaultMessage(kind),
-      code: _text(data['code']),
+      code: _identifier(data['code']),
       statusCode: status,
       correlationId:
-          _text(data['correlationId']) ??
-          error.response?.headers.value('X-Correlation-ID') ??
-          _text(error.requestOptions.headers['X-Correlation-ID']),
+          _identifier(data['correlationId']) ??
+          _identifier(error.response?.headers.value('X-Correlation-ID')) ??
+          _identifier(error.requestOptions.headers['X-Correlation-ID']),
       fieldErrors: _fields(data['violations'] ?? data['fieldErrors']),
     );
   }
 
   static String? _text(Object? value) =>
       value is String && value.trim().isNotEmpty ? value : null;
+
+  // Support metadata is visible in the UI and logs: accept bounded identifiers,
+  // not arbitrary backend diagnostics or user data.
+  static String? _identifier(Object? value) =>
+      value is String && RegExp(r'^[A-Za-z0-9_-]{1,128}$').hasMatch(value)
+      ? value
+      : null;
 
   static AppErrorKind _kind(DioExceptionType type, int? status) {
     if (type == DioExceptionType.cancel) return AppErrorKind.cancelled;

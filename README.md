@@ -1,6 +1,10 @@
-# HEALTH’YS mobile — socle et parcours patient 18.1–18.11
+# HEALTH’YS mobile — socle et parcours patient 18.1–18.12
 
-Application Flutter Android/iOS. Architecture par fonctionnalité, Riverpod pour injection/état, GoRouter pour navigation et Dio pour HTTP. Le thème Material 3 reprend le vert `#087f5b` du frontend HEALTH’YS et suit le mode clair/sombre du système. Interface initiale FR/EN selon la langue du téléphone, anglais par défaut.
+Application Flutter Android/iOS. Architecture par fonctionnalité, Riverpod pour injection/état, GoRouter pour navigation et Dio pour HTTP. Le thème Material 3 reprend le vert `#087f5b` du frontend HEALTH’YS. Mode système/clair/sombre et langue système/français/anglais sont sélectionnables et persistés dans les paramètres.
+
+## Stabilisation et publication (18.12)
+
+Le [guide Android/iOS et stores](docs/mobile-release/README.md) détaille la signature, les identifiants, la prévalidation, la recette réseau/offline, la sécurité des tokens, les mesures de performance et les configurations Play Console/App Store Connect. La CI compile Android debug/release et iOS release sans signature ; elle ne distribue aucun build aux stores. Les credentials fournisseurs et essais sur appareils doivent être finalisés avant distribution.
 
 ## Démarrer
 
@@ -22,7 +26,7 @@ flutter build appbundle --dart-define-from-file=config/prod.json
 flutter build ipa --dart-define-from-file=config/prod.json
 ```
 
-`APP_ENV` accepte `dev` ou `prod`. Production : URL explicite HTTPS terminant par `/api/v1`, sans identifiants, query ni fragment. Une configuration invalide bloque le démarrage. Un build release exige `APP_ENV=prod`. Les fichiers dart-define sont intégrés au binaire : **aucun secret** ne doit y figurer. Les clés de signature Android et l'équipe Apple doivent être configurées avant publication ; le projet conserve les identifiants `com.example.healthysv2` du dépôt initial pour ce socle. La signature Android release initiale reste celle de développement.
+`APP_ENV` accepte `dev` ou `prod`. Production : URL explicite HTTPS terminant par `/api/v1`, sans identifiants, query ni fragment. Une configuration invalide bloque le démarrage. Un build release exige `APP_ENV=prod`. Les fichiers dart-define sont intégrés au binaire : **aucun secret** ne doit y figurer. Android release exige `android/key.properties` et une clé dédiée : aucun fallback debug. Les identifiants `com.example.healthysv2` doivent être remplacés et l'équipe Apple configurée avant publication ; utiliser `tool/check_release.py` selon le guide.
 
 ## Organisation
 
@@ -64,7 +68,7 @@ flutter test
 flutter build bundle --target-platform=linux-x64 --dart-define-from-file=config/dev.json
 ```
 
-La CI vérifie également le package généré, la reproductibilité OpenAPI et la compilation APK debug. Les tests couvrent la configuration, le transport HTTP, les erreurs, le stockage et la navigation. Une compilation bundle vérifie le code Dart ; les builds APK/iOS demandent respectivement Android SDK et macOS/Xcode.
+La CI vérifie également le package généré, la reproductibilité OpenAPI, les tests de prévalidation stores, l'APK debug, l'AAB release signé avec une clé de test éphémère et le build iOS release sans signature sur macOS. Les tests couvrent la configuration, le transport HTTP, les erreurs, le stockage, les préférences et la navigation. Ces builds utilisent des fournisseurs injectés ou une configuration d'exemple ; la recette native et la distribution exigent les credentials réels et des appareils physiques.
 
 ## Authentification mobile (18.2)
 

@@ -167,6 +167,12 @@ class ApiInterceptor extends Interceptor {
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) async {
     final request = err.requestOptions;
+    // An earlier account's failure must not update the new account's UI or
+    // trigger its authentication recovery.
+    if (request.extra.containsKey(_revisionKey) && !_sameSession(request)) {
+      handler.next(_sessionChanged(request));
+      return;
+    }
     if (err.response?.statusCode == 401 &&
         request.extra['requiresAuth'] != false &&
         accessToken != null &&
@@ -185,7 +191,7 @@ class ApiInterceptor extends Interceptor {
           }
           // Mutations may opt out: refresh credentials without repeating an action.
           // Streams cannot be replayed safely either.
-          if (request.extra['retryOnUnauthorized'] != false &&
+          if (_canReplay(request) &&
               request.data is! Stream &&
               request.data is! FormData) {
             final retry = request.copyWith(
@@ -200,6 +206,10 @@ class ApiInterceptor extends Interceptor {
           handler.next(retryError);
           return;
         } catch (failure) {
+          if (!_sameSession(request)) {
+            handler.next(_sessionChanged(request));
+            return;
+          }
           handler.next(
             err.copyWith(
               error: AppException(
@@ -216,6 +226,10 @@ class ApiInterceptor extends Interceptor {
         }
       }
     }
+    if (request.extra.containsKey(_revisionKey) && !_sameSession(request)) {
+      handler.next(_sessionChanged(request));
+      return;
+    }
     handler.next(
       err.copyWith(
         error: err.error is AppException
@@ -223,6 +237,27 @@ class ApiInterceptor extends Interceptor {
             : AppException.fromDio(err),
       ),
     );
+  }
+
+  DioException _sessionChanged(RequestOptions request) => DioException(
+    requestOptions: request,
+    type: DioExceptionType.cancel,
+    error: const AppException(
+      kind: AppErrorKind.cancelled,
+      message: 'La session a changé.',
+    ),
+  );
+
+  bool _canReplay(RequestOptions request) {
+    final override = request.extra['retryOnUnauthorized'];
+    if (override is bool) return override;
+    // A mutation may already have reached the server. Only read-only HTTP
+    // methods are replayed automatically; explicit opt-in remains available.
+    return const {
+      'GET',
+      'HEAD',
+      'OPTIONS',
+    }.contains(request.method.toUpperCase());
   }
 
   Future<void> _expireSafely() async {

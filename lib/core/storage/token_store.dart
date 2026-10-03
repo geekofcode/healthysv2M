@@ -28,9 +28,17 @@ class SecureTokenStore implements SessionTokenStore {
   @override
   Future<SessionTokens?> readSession() async {
     final value = await _storage.read(key: _sessionKey);
-    return value == null
-        ? null
-        : SessionTokens.fromJson(jsonDecode(value) as Map<String, dynamic>);
+    if (value == null) return null;
+    try {
+      final data = jsonDecode(value);
+      if (data is! Map<String, dynamic>) throw const FormatException();
+      return SessionTokens.fromJson(data);
+    } on FormatException {
+      // Corrupt credentials cannot be restored. Clear the complete namespace,
+      // including a legacy access token, rather than fall back to stale data.
+      await clear();
+      return null;
+    }
   }
 
   @override
