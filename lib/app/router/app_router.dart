@@ -8,6 +8,8 @@ import '../../features/auth/presentation/auth_page.dart';
 import '../../features/auth/presentation/profile_page.dart';
 
 import '../../features/home/presentation/home_page.dart';
+import '../../features/teleconsultations/presentation/teleconsultations_page.dart';
+import '../../features/teleconsultations/presentation/teleconsultation_room_page.dart';
 import '../../features/notifications/presentation/notifications_page.dart';
 import '../../features/notifications/presentation/notification_detail_page.dart';
 import '../../features/notifications/presentation/notification_preferences_page.dart';
@@ -52,6 +54,17 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       return null;
     },
     routes: [
+      GoRoute(
+        path: '/teleconsultations',
+        name: 'teleconsultations',
+        builder: (_, _) => const TeleconsultationsPage(),
+      ),
+      GoRoute(
+        path: '/teleconsultations/:id',
+        name: 'teleconsultation-room',
+        builder: (_, state) =>
+            TeleconsultationRoomPage(id: state.pathParameters['id']!),
+      ),
       GoRoute(
         path: '/notifications',
         name: 'notifications',
@@ -256,6 +269,7 @@ bool _knownReturnPath(String path) {
     '/maternal-child',
     '/messages',
     '/messages/new',
+    '/teleconsultations',
     '/notifications',
     '/notification-preferences',
   }.contains(path)) {
@@ -267,7 +281,7 @@ bool _knownReturnPath(String path) {
       RegExp('^/consultations/$uuid(?:/documents)?\$').hasMatch(path) ||
       RegExp('^/documents/$uuid/view\$').hasMatch(path) ||
       RegExp(
-        '^/(?:lab-results|prescriptions|messages|notifications)/$uuid\$',
+        '^/(?:lab-results|prescriptions|messages|notifications|teleconsultations)/$uuid\$',
       ).hasMatch(path) ||
       RegExp(
         '^/maternal-child/(?:pregnancies|children)/$uuid\$',

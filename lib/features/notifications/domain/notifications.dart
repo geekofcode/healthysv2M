@@ -94,6 +94,7 @@ String notificationDestination(HealthysNotification notification) {
     'CONVERSATION' => '/messages/$id',
     'PREGNANCY' => '/maternal-child/pregnancies/$id',
     'CHILD' => '/maternal-child/children/$id',
+    'VIDEO_SESSION' || 'TELECONSULTATION' => '/teleconsultations/$id',
     _ => '/notifications',
   };
 }

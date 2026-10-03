@@ -1,4 +1,4 @@
-# HEALTH’YS mobile — socle et parcours patient 18.1–18.10
+# HEALTH’YS mobile — socle et parcours patient 18.1–18.11
 
 Application Flutter Android/iOS. Architecture par fonctionnalité, Riverpod pour injection/état, GoRouter pour navigation et Dio pour HTTP. Le thème Material 3 reprend le vert `#087f5b` du frontend HEALTH’YS et suit le mode clair/sombre du système. Interface initiale FR/EN selon la langue du téléphone, anglais par défaut.
 
@@ -157,6 +157,8 @@ La création d’une conversation sélectionne un professionnel nommé parmi les
 
 ## Notifications push et préférences (18.10)
 
+Procédure complète : [Configurer Firebase/APNs et vérifier les notifications](docs/firebase-apns/README.md).
+
 La cloche de l’accueil ouvre l’historique paginé, le filtre non-lu, la lecture et les détails. Les paramètres permettent d’activer les notifications sur l’appareil, de les désactiver et de modifier les préférences in-app. L’application distingue une permission refusée, une configuration indisponible et un échec d’enregistrement. Les préférences existantes de courriel/SMS et les heures de silence sont conservées ; les horaires affichés sont UTC. Ces préférences ne mettent pas en place de fournisseur courriel/SMS.
 
 Le push est **désactivé par défaut** (`PUSH_ENABLED=false`). Pour un build connecté, enregistrer les applications Android/iOS dans Firebase avec leurs véritables identifiants, puis fournir les fichiers publics de configuration `android/app/google-services.json` et `ios/Runner/GoogleService-Info.plist` (ignorés par Git). Le build Android applique le plugin Google Services lorsque le fichier existe ; le build iOS copie le plist et configure Firebase avant le démarrage Flutter, ce qui permet l’initialisation native lorsque le système réveille l’application.
@@ -168,3 +170,24 @@ Android utilise le canal `healthys_notifications` et demande la permission syst�
 Déployer le backend 18.10 et sa migration V17 : enregistrement/rotation du token d’appareil, révocation et envoi FCM HTTP v1. L’UUID d’installation et la capacité de révocation sont conservés dans le stockage sécurisé. Une déconnexion ou expiration supprime le token local et tente la révocation serveur ; si le réseau manque, la révocation reste en attente et doit réussir avant un nouvel enregistrement. Une révocation hors ligne ne peut pas être confirmée immédiatement au serveur.
 
 Les alertes sur écran verrouillé contiennent seulement un texte générique HEALTH’YS et une référence de notification. En premier plan, une bannière générique et les compteurs sont actualisés. Après un appui, y compris au démarrage à froid, l’application vérifie la session et récupère la notification auprès du serveur avant d’ouvrir une route patient autorisée. Les URL contenues dans un payload sont ignorées. Les tests automatisés injectent Firebase et le serveur ; la CI compile Android. La réception réelle FCM/APNs, les permissions et les ouvertures à froid doivent être validées sur des appareils configurés ; aucun certificat ni compte Firebase/APNs n’est créé automatiquement.
+
+## Téléconsultation mobile (18.11)
+
+L’accueil et le détail d’un rendez-vous donnent accès aux téléconsultations paginées. La salle d’attente affiche le professionnel, l’horaire et le statut, puis se resynchronise tant que l’écran est visible. Le patient entre explicitement dans la salle d’attente ; le professionnel démarre la séance et admet le patient. Le serveur fournit `canJoin`, sans déduire l’admission depuis un identifiant local.
+
+Les permissions caméra/microphone sont demandées uniquement lorsqu’un média choisi est activé. Les deux médias sont désactivés par défaut, y compris dans la salle d’attente. L’appel LiveKit affiche les vidéos distante et locale, avec contrôles caméra, microphone et changement de caméra. Un refus de permission permet de consulter les réglages ou de rejoindre sans publier le média refusé. Aucun enregistrement n’est ajouté.
+
+La perte de réseau affiche une reconnexion limitée ; une interruption prolongée impose de rejoindre à nouveau. La mise en arrière-plan, le masquage de la route, la sortie de l’écran et la fin de session ferment les médias. Le retour au premier plan ne rallume pas automatiquement caméra/microphone : rejoindre explicitement après une nouvelle vérification serveur. Quitter l’appel ferme la connexion locale et marque la sortie du patient, sans terminer la consultation pour le professionnel. Après cette sortie, une nouvelle admission est nécessaire.
+
+Déployer le backend 18.11 et sa migration V18. Le mobile utilise `GET /api/v1/video-sessions/page` et `/{id}`, puis `POST /{id}/waiting-room`, `/{id}/token` et `/{id}/leave`. Les mutations ne sont pas rejouées après un résultat incertain. Les jetons LiveKit restent en mémoire, ne sont pas journalisés et ne contiennent aucun secret de signature serveur. Production : le serveur doit retourner une URL `wss://` valide, avec un certificat reconnu et une connectivité RTC/TURN adaptée aux réseaux mobiles.
+
+Configurer `LIVEKIT_URL`, `LIVEKIT_API_KEY`, `LIVEKIT_API_SECRET` et `LIVEKIT_TOKEN_TTL_MINUTES` côté backend uniquement. La durée par défaut est 5 minutes (1 à 15 autorisées). Sur le serveur LiveKit, désactiver impérativement la création automatique des salles :
+
+```yaml
+room:
+  auto_create: false
+```
+
+HEALTH’YS crée la salle explicitement avant le démarrage et avant un jeton autorisé d’une séance active. La fermeture clinique bloque immédiatement les nouveaux jetons ; la suppression de la salle LiveKit est mise en file après le commit serveur (intervalle normal 10 secondes, reprises bornées). Une panne du fournisseur peut retarder la fermeture distante : surveiller les tâches de nettoyage en échec côté backend. Sans `auto_create: false`, un ancien jeton encore valide pourrait recréer une salle supprimée. Quitter une séance active ne révoque pas immédiatement un jeton LiveKit déjà émis ; sa validité est courte et le client le détruit à la fermeture.
+
+La CI vérifie les contrôleurs avec un SDK média injecté et compile l’APK Android. Tester sur Android et iOS physiques avec le serveur LiveKit configuré : admission depuis le web, caméra avant/arrière, micro et audio distant, refus de permissions, Wi-Fi/réseau mobile, appel téléphonique entrant, arrière-plan, écran masqué, fin professionnelle et expiration de session. Le build iOS nécessite macOS/Xcode. Voir la [configuration Flutter LiveKit](https://docs.livekit.io/transport/sdk-platforms/flutter/) et le [déploiement LiveKit](https://docs.livekit.io/transport/self-hosting/).

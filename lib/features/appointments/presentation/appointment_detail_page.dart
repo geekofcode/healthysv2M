@@ -106,6 +106,17 @@ class _AppointmentDetailPageState extends ConsumerState<AppointmentDetailPage> {
                               : 'Check your appointment status before submitting another request.',
                         ),
                       ],
+                      if (appointment.type == 'TELECONSULTATION')
+                        OutlinedButton.icon(
+                          onPressed: () =>
+                              context.pushNamed('teleconsultations'),
+                          icon: const Icon(Icons.video_call_outlined),
+                          label: Text(
+                            fr
+                                ? 'Ouvrir mes téléconsultations'
+                                : 'Open my video consultations',
+                          ),
+                        ),
                       if (appointment.canReschedule)
                         OutlinedButton.icon(
                           onPressed: _busy

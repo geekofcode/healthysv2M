@@ -78,6 +78,13 @@ class HomePage extends ConsumerWidget {
                     ),
                     const SizedBox(height: 12),
                     OutlinedButton.icon(
+                      onPressed: () => context.pushNamed('teleconsultations'),
+                      icon: const Icon(Icons.video_call_outlined),
+                      label: Text(
+                        fr ? 'Mes téléconsultations' : 'My video consultations',
+                      ),
+                    ),
+                    OutlinedButton.icon(
                       onPressed: () => context.pushNamed('consultations'),
                       icon: const Icon(Icons.medical_services_outlined),
                       label: Text(
