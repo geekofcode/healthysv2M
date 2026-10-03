@@ -123,16 +123,26 @@ class LiveKitTeleconsultationMedia implements TeleconsultationMedia {
   Widget videoView({required bool local}) => ListenableBuilder(
     listenable: _room,
     builder: (context, _) {
-      final publications = local
-          ? _room.localParticipant?.videoTrackPublications
-          : _room.remoteParticipants.values
-                .expand((p) => p.videoTrackPublications)
-                .toList();
-      final tracks = publications
-          ?.where((p) => !p.muted)
-          .map((p) => p.track)
-          .whereType<lk.VideoTrack>();
-      if (tracks == null || tracks.isEmpty) {
+      final tracks = <lk.VideoTrack>[];
+      if (local) {
+        for (final publication
+            in _room.localParticipant?.videoTrackPublications ?? []) {
+          final track = publication.track;
+          if (!publication.muted && track is lk.VideoTrack) {
+            tracks.add(track);
+          }
+        }
+      } else {
+        for (final participant in _room.remoteParticipants.values) {
+          for (final publication in participant.videoTrackPublications) {
+            final track = publication.track;
+            if (!publication.muted && track is lk.VideoTrack) {
+              tracks.add(track);
+            }
+          }
+        }
+      }
+      if (tracks.isEmpty) {
         return const Center(child: Icon(Icons.videocam_off, size: 48));
       }
       return lk.VideoTrackRenderer(tracks.first);

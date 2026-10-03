@@ -62,7 +62,7 @@ class DioTeleconsultationRepository implements TeleconsultationRepository {
   static final _once = Options(extra: {'retryOnUnauthorized': false});
   Future<void> _post(String path, CancelToken? token) => _request(
     () => dio.post<Object?>(path, cancelToken: token, options: _once),
-    (_) => null,
+    (_) {},
   );
   Future<T> _request<T>(
     Future<Response<Object?>> Function() send,
