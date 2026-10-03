@@ -30,8 +30,9 @@ class SessionTokens {
       throw const FormatException('Invalid secure session');
     }
     final expiresAt = DateTime.tryParse(expiry);
-    if (expiresAt == null)
+    if (expiresAt == null) {
       throw const FormatException('Invalid secure session');
+    }
     return SessionTokens(
       accessToken: access,
       expiresAt: expiresAt,

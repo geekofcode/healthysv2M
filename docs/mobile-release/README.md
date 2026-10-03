@@ -32,7 +32,8 @@ pas une connexion au backend réel. Ils ne sont pas distribuables.
 - Les demandes caméra/micro iOS sont localisées FR/EN selon la langue native de
   l'application, indépendamment du choix interne Flutter. Les médias sont éteints
   par défaut ; arrière-plan, logout et retrait d'admission coupent les médias.
-- Listes paginées, rendu paresseux, polling d'attente limité aux routes visibles,
+- Palettes de thème réutilisées lors des changements de session/push, sans recalcul.
+  Listes paginées, rendu paresseux, polling d'attente limité aux routes visibles,
   LiveKit adaptive stream/dynacast et fermeture bornée des ressources sont conservés.
   La compilation release applique les optimisations de Flutter. Aucun gain de
   latence, mémoire ou batterie n'est annoncé sans mesure sur appareil.

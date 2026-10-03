@@ -4,8 +4,9 @@ abstract final class HealthysTheme {
   static const primary = Color(0xFF087F5B);
   static const secondary = Color(0xFF0F513F);
 
-  static ThemeData get light => _build(Brightness.light);
-  static ThemeData get dark => _build(Brightness.dark);
+  // Themes are immutable: reuse seed palettes across session/push rebuilds.
+  static final ThemeData light = _build(Brightness.light);
+  static final ThemeData dark = _build(Brightness.dark);
 
   static ThemeData _build(Brightness brightness) {
     final colors = ColorScheme.fromSeed(
