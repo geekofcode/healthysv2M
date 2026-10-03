@@ -12,7 +12,8 @@ if (file("google-services.json").exists()) {
 
 android {
     namespace = "com.example.healthysv2"
-    compileSdk = flutter.compileSdkVersion
+    // permission_handler_android requires API 37; runtime targets remain Flutter's defaults.
+    compileSdk = 37
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
